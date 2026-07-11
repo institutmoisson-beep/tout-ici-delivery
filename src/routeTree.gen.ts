@@ -13,6 +13,7 @@ import { Route as RestaurantsRouteImport } from './routes/restaurants'
 import { Route as CguRouteImport } from './routes/cgu'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as RestaurantsIdRouteImport } from './routes/restaurants.$id'
 
 const RestaurantsRoute = RestaurantsRouteImport.update({
   id: '/restaurants',
@@ -34,39 +35,47 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RestaurantsIdRoute = RestaurantsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => RestaurantsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/cgu': typeof CguRoute
-  '/restaurants': typeof RestaurantsRoute
+  '/restaurants': typeof RestaurantsRouteWithChildren
+  '/restaurants/$id': typeof RestaurantsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/cgu': typeof CguRoute
-  '/restaurants': typeof RestaurantsRoute
+  '/restaurants': typeof RestaurantsRouteWithChildren
+  '/restaurants/$id': typeof RestaurantsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/cgu': typeof CguRoute
-  '/restaurants': typeof RestaurantsRoute
+  '/restaurants': typeof RestaurantsRouteWithChildren
+  '/restaurants/$id': typeof RestaurantsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/cgu' | '/restaurants'
+  fullPaths: '/' | '/auth' | '/cgu' | '/restaurants' | '/restaurants/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/cgu' | '/restaurants'
-  id: '__root__' | '/' | '/auth' | '/cgu' | '/restaurants'
+  to: '/' | '/auth' | '/cgu' | '/restaurants' | '/restaurants/$id'
+  id: '__root__' | '/' | '/auth' | '/cgu' | '/restaurants' | '/restaurants/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   CguRoute: typeof CguRoute
-  RestaurantsRoute: typeof RestaurantsRoute
+  RestaurantsRoute: typeof RestaurantsRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -99,14 +108,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/restaurants/$id': {
+      id: '/restaurants/$id'
+      path: '/$id'
+      fullPath: '/restaurants/$id'
+      preLoaderRoute: typeof RestaurantsIdRouteImport
+      parentRoute: typeof RestaurantsRoute
+    }
   }
 }
+
+interface RestaurantsRouteChildren {
+  RestaurantsIdRoute: typeof RestaurantsIdRoute
+}
+
+const RestaurantsRouteChildren: RestaurantsRouteChildren = {
+  RestaurantsIdRoute: RestaurantsIdRoute,
+}
+
+const RestaurantsRouteWithChildren = RestaurantsRoute._addFileChildren(
+  RestaurantsRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   CguRoute: CguRoute,
-  RestaurantsRoute: RestaurantsRoute,
+  RestaurantsRoute: RestaurantsRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
