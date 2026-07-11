@@ -76,7 +76,7 @@ function OrdersLedger() {
     return () => { supabase.removeChannel(ch); };
   }, [qc]);
 
-  const updateStatus = async (id: string, status: string) => {
+  const updateStatus = async (id: string, status: any) => {
     const { error } = await supabase.from("orders").update({ status }).eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Statut mis à jour");
