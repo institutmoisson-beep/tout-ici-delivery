@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Store, UtensilsCrossed, MapPin, Package, Wallet, ShieldCheck, Plus, Trash2, CheckCircle2, XCircle, Facebook, MessageCircle } from "lucide-react";
+import { Store, UtensilsCrossed, MapPin, Package, Wallet, ShieldCheck, Plus, Trash2, CheckCircle2, XCircle, Facebook, MessageCircle, Zap, Copy, PlayCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,6 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { formatXof, IVORIAN_CITIES } from "@/lib/distance";
+import { Switch } from "@/components/ui/switch";
+import { resolveTemplate } from "@/lib/gateway";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
@@ -43,12 +45,14 @@ function AdminPage() {
       </div>
 
       <Tabs defaultValue="orders">
-        <TabsList className="grid grid-cols-2 md:grid-cols-5 w-full">
+        <TabsList className="grid grid-cols-2 md:grid-cols-7 w-full">
           <TabsTrigger value="orders"><Package className="h-4 w-4 mr-1" />Commandes</TabsTrigger>
           <TabsTrigger value="restaurants"><Store className="h-4 w-4 mr-1" />Restaurants</TabsTrigger>
           <TabsTrigger value="dishes"><UtensilsCrossed className="h-4 w-4 mr-1" />Plats</TabsTrigger>
           <TabsTrigger value="relais"><MapPin className="h-4 w-4 mr-1" />Relais</TabsTrigger>
           <TabsTrigger value="recharges"><Wallet className="h-4 w-4 mr-1" />Recharges</TabsTrigger>
+          <TabsTrigger value="gateways"><Zap className="h-4 w-4 mr-1" />Passerelles</TabsTrigger>
+          <TabsTrigger value="finance"><ShieldCheck className="h-4 w-4 mr-1" />MSN Ledger</TabsTrigger>
         </TabsList>
 
         <TabsContent value="orders" className="mt-6"><OrdersLedger /></TabsContent>
@@ -56,6 +60,8 @@ function AdminPage() {
         <TabsContent value="dishes" className="mt-6"><DishesAdmin /></TabsContent>
         <TabsContent value="relais" className="mt-6"><RelaisAdmin /></TabsContent>
         <TabsContent value="recharges" className="mt-6"><RechargesAdmin /></TabsContent>
+        <TabsContent value="gateways" className="mt-6"><GatewaysAdmin /></TabsContent>
+        <TabsContent value="finance" className="mt-6"><FinanceLedger /></TabsContent>
       </Tabs>
     </div>
   );
