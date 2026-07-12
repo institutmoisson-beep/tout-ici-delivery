@@ -83,10 +83,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Tout'ICI — Livraison de restaurants en Côte d'Ivoire" },
       { name: "description", content: "Commandez auprès des meilleurs restaurants ivoiriens. Livraison GPS au kilomètre, points relais, wallet intégré." },
-      { property: "og:title", content: "Tout'ICI — Marketplace gastronomique ivoirien" },
-      { property: "og:description", content: "Restaurants d'Abidjan, Bouaké, Yamoussoukro, San-Pédro. Livraison intelligente calculée au kilomètre." },
+      { property: "og:title", content: "Tout'ICI — Livraison de restaurants en Côte d'Ivoire" },
+      { property: "og:description", content: "Commandez auprès des meilleurs restaurants ivoiriens. Livraison GPS au kilomètre, points relais, wallet intégré." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Tout'ICI — Livraison de restaurants en Côte d'Ivoire" },
+      { name: "twitter:description", content: "Commandez auprès des meilleurs restaurants ivoiriens. Livraison GPS au kilomètre, points relais, wallet intégré." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/PN6Nnr28wLfGa2Qlc7HtnDuGlQp1/social-images/social-1783816026736-1000473861.webp" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/PN6Nnr28wLfGa2Qlc7HtnDuGlQp1/social-images/social-1783816026736-1000473861.webp" },
     ],
     links: [
       {
