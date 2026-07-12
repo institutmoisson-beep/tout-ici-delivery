@@ -1,5 +1,5 @@
 import { Link, useRouter } from "@tanstack/react-router";
-import { ShoppingBag, Wallet, User as UserIcon, LogOut, ShieldCheck, Menu } from "lucide-react";
+import { ShoppingBag, Wallet, User as UserIcon, LogOut, ShieldCheck, Menu, LayoutDashboard } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useCart } from "@/hooks/use-cart";
@@ -33,6 +33,7 @@ export function SiteHeader() {
         <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
           <Link to="/" activeOptions={{ exact: true }} className="text-muted-foreground hover:text-foreground transition-colors">Accueil</Link>
           <Link to="/restaurants" className="text-muted-foreground hover:text-foreground transition-colors">Restaurants</Link>
+          {user && <Link to="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">Tableau de bord</Link>}
           {user && <Link to="/orders" className="text-muted-foreground hover:text-foreground transition-colors">Commandes</Link>}
           {user && <Link to="/wallet" className="text-muted-foreground hover:text-foreground transition-colors">Wallet</Link>}
           {isAdmin && <Link to="/admin" className="text-accent hover:text-accent/80 transition-colors flex items-center gap-1"><ShieldCheck className="h-4 w-4" />Admin</Link>}
@@ -62,6 +63,9 @@ export function SiteHeader() {
               <DropdownMenuContent align="end" className="w-56">
                 <div className="px-2 py-1.5 text-xs text-muted-foreground truncate">{user.email}</div>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => router.navigate({ to: "/dashboard" })}>
+                  <LayoutDashboard className="mr-2 h-4 w-4" />Tableau de bord
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => router.navigate({ to: "/orders" })}>
                   <ShoppingBag className="mr-2 h-4 w-4" />Mes commandes
                 </DropdownMenuItem>
@@ -96,6 +100,7 @@ export function SiteHeader() {
           <nav className="container mx-auto px-4 py-3 flex flex-col gap-3 text-sm">
             <Link to="/" onClick={() => setMobileOpen(false)}>Accueil</Link>
             <Link to="/restaurants" onClick={() => setMobileOpen(false)}>Restaurants</Link>
+            {user && <Link to="/dashboard" onClick={() => setMobileOpen(false)}>Tableau de bord</Link>}
             {user && <Link to="/orders" onClick={() => setMobileOpen(false)}>Commandes</Link>}
             {user && <Link to="/wallet" onClick={() => setMobileOpen(false)}>Wallet</Link>}
             {isAdmin && <Link to="/admin" onClick={() => setMobileOpen(false)}>Admin</Link>}
