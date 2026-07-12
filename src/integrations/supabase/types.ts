@@ -58,6 +58,87 @@ export type Database = {
           },
         ]
       }
+      financial_transactions: {
+        Row: {
+          admin_note: string | null
+          amount: number
+          associated_order_id: string | null
+          compiled_syntax: string | null
+          created_at: string
+          currency: string
+          destination_account: string | null
+          destination_name: string | null
+          gateway_id: string | null
+          id: string
+          payment_method: string | null
+          processed_at: string | null
+          processed_by: string | null
+          proof_url: string | null
+          status: Database["public"]["Enums"]["fin_tx_status"]
+          transaction_reference: string | null
+          type: Database["public"]["Enums"]["fin_tx_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          amount: number
+          associated_order_id?: string | null
+          compiled_syntax?: string | null
+          created_at?: string
+          currency?: string
+          destination_account?: string | null
+          destination_name?: string | null
+          gateway_id?: string | null
+          id?: string
+          payment_method?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          proof_url?: string | null
+          status?: Database["public"]["Enums"]["fin_tx_status"]
+          transaction_reference?: string | null
+          type: Database["public"]["Enums"]["fin_tx_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          amount?: number
+          associated_order_id?: string | null
+          compiled_syntax?: string | null
+          created_at?: string
+          currency?: string
+          destination_account?: string | null
+          destination_name?: string | null
+          gateway_id?: string | null
+          id?: string
+          payment_method?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          proof_url?: string | null
+          status?: Database["public"]["Enums"]["fin_tx_status"]
+          transaction_reference?: string | null
+          type?: Database["public"]["Enums"]["fin_tx_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_transactions_associated_order_id_fkey"
+            columns: ["associated_order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_transactions_gateway_id_fkey"
+            columns: ["gateway_id"]
+            isOneToOne: false
+            referencedRelation: "payment_gateways"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           calculated_distance_km: number | null
@@ -147,6 +228,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      payment_gateways: {
+        Row: {
+          account_details: string | null
+          category: string
+          created_at: string
+          deep_link_template: string | null
+          display_name: string
+          id: string
+          instructions: string | null
+          is_active: boolean
+          logo_emoji: string | null
+          method_name: string
+          qr_payload: string | null
+          sort_order: number
+          updated_at: string
+          ussd_deposit_template: string | null
+          ussd_payout_template: string | null
+        }
+        Insert: {
+          account_details?: string | null
+          category: string
+          created_at?: string
+          deep_link_template?: string | null
+          display_name: string
+          id?: string
+          instructions?: string | null
+          is_active?: boolean
+          logo_emoji?: string | null
+          method_name: string
+          qr_payload?: string | null
+          sort_order?: number
+          updated_at?: string
+          ussd_deposit_template?: string | null
+          ussd_payout_template?: string | null
+        }
+        Update: {
+          account_details?: string | null
+          category?: string
+          created_at?: string
+          deep_link_template?: string | null
+          display_name?: string
+          id?: string
+          instructions?: string | null
+          is_active?: boolean
+          logo_emoji?: string | null
+          method_name?: string
+          qr_payload?: string | null
+          sort_order?: number
+          updated_at?: string
+          ussd_deposit_template?: string | null
+          ussd_payout_template?: string | null
+        }
+        Relationships: []
       }
       points_relais: {
         Row: {
@@ -618,6 +753,7 @@ export type Database = {
         | { Args: { schema_name: string; table_name: string }; Returns: string }
         | { Args: { table_name: string }; Returns: string }
       enablelongtransactions: { Args: never; Returns: string }
+      ensure_wallet: { Args: { _uid: string }; Returns: number }
       equals: { Args: { geom1: unknown; geom2: unknown }; Returns: boolean }
       geometry: { Args: { "": string }; Returns: unknown }
       geometry_above: {
@@ -1362,6 +1498,13 @@ export type Database = {
     Enums: {
       app_role: "admin" | "user"
       delivery_mode: "EXPRESS" | "RELAIS"
+      fin_tx_status:
+        | "PENDING"
+        | "PROCESSING"
+        | "APPROVED"
+        | "REJECTED"
+        | "DISBURSED"
+      fin_tx_type: "PURCHASE" | "RECHARGE" | "WITHDRAWAL"
       order_status:
         | "PENDING"
         | "PREPARING"
@@ -1508,6 +1651,14 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "user"],
       delivery_mode: ["EXPRESS", "RELAIS"],
+      fin_tx_status: [
+        "PENDING",
+        "PROCESSING",
+        "APPROVED",
+        "REJECTED",
+        "DISBURSED",
+      ],
+      fin_tx_type: ["PURCHASE", "RECHARGE", "WITHDRAWAL"],
       order_status: [
         "PENDING",
         "PREPARING",
