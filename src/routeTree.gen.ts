@@ -18,6 +18,7 @@ import { Route as RestaurantsIdRouteImport } from './routes/restaurants.$id'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
 import { Route as AuthenticatedSetupRouteImport } from './routes/_authenticated/setup'
 import { Route as AuthenticatedOrdersRouteImport } from './routes/_authenticated/orders'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCheckoutRouteImport } from './routes/_authenticated/checkout'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 
@@ -65,6 +66,11 @@ const AuthenticatedOrdersRoute = AuthenticatedOrdersRouteImport.update({
   path: '/orders',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedCheckoutRoute = AuthenticatedCheckoutRouteImport.update({
   id: '/checkout',
   path: '/checkout',
@@ -83,6 +89,7 @@ export interface FileRoutesByFullPath {
   '/restaurants': typeof RestaurantsRouteWithChildren
   '/admin': typeof AuthenticatedAdminRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/orders': typeof AuthenticatedOrdersRoute
   '/setup': typeof AuthenticatedSetupRoute
   '/wallet': typeof AuthenticatedWalletRoute
@@ -95,6 +102,7 @@ export interface FileRoutesByTo {
   '/restaurants': typeof RestaurantsRouteWithChildren
   '/admin': typeof AuthenticatedAdminRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/orders': typeof AuthenticatedOrdersRoute
   '/setup': typeof AuthenticatedSetupRoute
   '/wallet': typeof AuthenticatedWalletRoute
@@ -109,6 +117,7 @@ export interface FileRoutesById {
   '/restaurants': typeof RestaurantsRouteWithChildren
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/checkout': typeof AuthenticatedCheckoutRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/orders': typeof AuthenticatedOrdersRoute
   '/_authenticated/setup': typeof AuthenticatedSetupRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
@@ -123,6 +132,7 @@ export interface FileRouteTypes {
     | '/restaurants'
     | '/admin'
     | '/checkout'
+    | '/dashboard'
     | '/orders'
     | '/setup'
     | '/wallet'
@@ -135,6 +145,7 @@ export interface FileRouteTypes {
     | '/restaurants'
     | '/admin'
     | '/checkout'
+    | '/dashboard'
     | '/orders'
     | '/setup'
     | '/wallet'
@@ -148,6 +159,7 @@ export interface FileRouteTypes {
     | '/restaurants'
     | '/_authenticated/admin'
     | '/_authenticated/checkout'
+    | '/_authenticated/dashboard'
     | '/_authenticated/orders'
     | '/_authenticated/setup'
     | '/_authenticated/wallet'
@@ -227,6 +239,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOrdersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/checkout': {
       id: '/_authenticated/checkout'
       path: '/checkout'
@@ -247,6 +266,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedCheckoutRoute: typeof AuthenticatedCheckoutRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedOrdersRoute: typeof AuthenticatedOrdersRoute
   AuthenticatedSetupRoute: typeof AuthenticatedSetupRoute
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
@@ -255,6 +275,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedCheckoutRoute: AuthenticatedCheckoutRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedOrdersRoute: AuthenticatedOrdersRoute,
   AuthenticatedSetupRoute: AuthenticatedSetupRoute,
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
