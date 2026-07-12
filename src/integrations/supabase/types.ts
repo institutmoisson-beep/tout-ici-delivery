@@ -185,22 +185,34 @@ export type Database = {
         Row: {
           cgu_accepted_at: string | null
           created_at: string
+          default_address: string | null
+          default_latitude: number | null
+          default_longitude: number | null
           full_name: string | null
           id: string
+          location_updated_at: string | null
           phone: string | null
         }
         Insert: {
           cgu_accepted_at?: string | null
           created_at?: string
+          default_address?: string | null
+          default_latitude?: number | null
+          default_longitude?: number | null
           full_name?: string | null
           id: string
+          location_updated_at?: string | null
           phone?: string | null
         }
         Update: {
           cgu_accepted_at?: string | null
           created_at?: string
+          default_address?: string | null
+          default_latitude?: number | null
+          default_longitude?: number | null
           full_name?: string | null
           id?: string
+          location_updated_at?: string | null
           phone?: string | null
         }
         Relationships: []
