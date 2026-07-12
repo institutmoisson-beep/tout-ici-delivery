@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Store, UtensilsCrossed, MapPin, Package, Wallet, ShieldCheck, Plus, Trash2, CheckCircle2, XCircle, Facebook, MessageCircle } from "lucide-react";
+import { Store, UtensilsCrossed, MapPin, Package, Wallet, ShieldCheck, Plus, Trash2, CheckCircle2, XCircle, Facebook, MessageCircle, Zap, Copy, PlayCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,6 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { formatXof, IVORIAN_CITIES } from "@/lib/distance";
+import { Switch } from "@/components/ui/switch";
+import { resolveTemplate } from "@/lib/gateway";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
@@ -43,12 +45,14 @@ function AdminPage() {
       </div>
 
       <Tabs defaultValue="orders">
-        <TabsList className="grid grid-cols-2 md:grid-cols-5 w-full">
+        <TabsList className="grid grid-cols-2 md:grid-cols-7 w-full">
           <TabsTrigger value="orders"><Package className="h-4 w-4 mr-1" />Commandes</TabsTrigger>
           <TabsTrigger value="restaurants"><Store className="h-4 w-4 mr-1" />Restaurants</TabsTrigger>
           <TabsTrigger value="dishes"><UtensilsCrossed className="h-4 w-4 mr-1" />Plats</TabsTrigger>
           <TabsTrigger value="relais"><MapPin className="h-4 w-4 mr-1" />Relais</TabsTrigger>
           <TabsTrigger value="recharges"><Wallet className="h-4 w-4 mr-1" />Recharges</TabsTrigger>
+          <TabsTrigger value="gateways"><Zap className="h-4 w-4 mr-1" />Passerelles</TabsTrigger>
+          <TabsTrigger value="finance"><ShieldCheck className="h-4 w-4 mr-1" />MSN Ledger</TabsTrigger>
         </TabsList>
 
         <TabsContent value="orders" className="mt-6"><OrdersLedger /></TabsContent>
@@ -56,6 +60,8 @@ function AdminPage() {
         <TabsContent value="dishes" className="mt-6"><DishesAdmin /></TabsContent>
         <TabsContent value="relais" className="mt-6"><RelaisAdmin /></TabsContent>
         <TabsContent value="recharges" className="mt-6"><RechargesAdmin /></TabsContent>
+        <TabsContent value="gateways" className="mt-6"><GatewaysAdmin /></TabsContent>
+        <TabsContent value="finance" className="mt-6"><FinanceLedger /></TabsContent>
       </Tabs>
     </div>
   );
@@ -425,5 +431,212 @@ function RechargesAdmin() {
       ))}
       {recharges.length === 0 && <p className="text-center text-muted-foreground py-8">Aucune demande</p>}
     </div>
+  );
+}
+// ============ MSN GATEWAYS CONFIG ============
+function GatewaysAdmin() {
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<any>(null);
+  const { data: gateways = [] } = useQuery({
+    queryKey: ["admin-gateways"],
+    queryFn: async () => (await supabase.from("payment_gateways").select("*").order("sort_order")).data ?? [],
+  });
+
+  const remove = async (id: string) => {
+    if (!confirm("Supprimer cette passerelle ?")) return;
+    await supabase.from("payment_gateways").delete().eq("id", id);
+    qc.invalidateQueries({ queryKey: ["admin-gateways"] });
+  };
+  const toggle = async (g: any) => {
+    await supabase.from("payment_gateways").update({ is_active: !g.is_active }).eq("id", g.id);
+    qc.invalidateQueries({ queryKey: ["admin-gateways"] });
+  };
+
+  return (
+    <>
+      <div className="flex justify-end mb-4">
+        <Button className="bg-gradient-primary border-0" onClick={() => { setEditing(null); setOpen(true); }}>
+          <Plus className="h-4 w-4 mr-1" />Nouvelle passerelle
+        </Button>
+      </div>
+      <div className="grid gap-3">
+        {gateways.map((g: any) => (
+          <Card key={g.id} className="p-4 bg-gradient-card border-border/40">
+            <div className="flex flex-wrap items-start gap-3">
+              <span className="text-3xl">{g.logo_emoji}</span>
+              <div className="flex-1 min-w-[200px]">
+                <p className="font-semibold">{g.display_name} <span className="text-xs text-muted-foreground">· {g.category}</span></p>
+                <p className="text-xs text-muted-foreground">Compte : <code>{g.account_details ?? "—"}</code></p>
+                {g.ussd_deposit_template && <p className="text-xs mt-1">Dépôt : <code>{g.ussd_deposit_template}</code></p>}
+                {g.ussd_payout_template && <p className="text-xs">Retrait : <code>{g.ussd_payout_template}</code></p>}
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch checked={g.is_active} onCheckedChange={() => toggle(g)} />
+                <Button size="icon" variant="outline" onClick={() => { setEditing(g); setOpen(true); }}><Zap className="h-4 w-4" /></Button>
+                <Button size="icon" variant="outline" onClick={() => remove(g.id)}><Trash2 className="h-4 w-4" /></Button>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="bg-card max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{editing ? "Modifier" : "Créer"} une passerelle</DialogTitle></DialogHeader>
+          <GatewayForm initial={editing} onDone={() => { setOpen(false); qc.invalidateQueries({ queryKey: ["admin-gateways"] }); }} />
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+function GatewayForm({ initial, onDone }: { initial: any; onDone: () => void }) {
+  const [f, setF] = useState({
+    method_name: initial?.method_name ?? "",
+    display_name: initial?.display_name ?? "",
+    category: initial?.category ?? "MOBILE_MONEY",
+    logo_emoji: initial?.logo_emoji ?? "💳",
+    account_details: initial?.account_details ?? "",
+    deep_link_template: initial?.deep_link_template ?? "",
+    ussd_deposit_template: initial?.ussd_deposit_template ?? "",
+    ussd_payout_template: initial?.ussd_payout_template ?? "",
+    instructions: initial?.instructions ?? "",
+    sort_order: initial?.sort_order ?? 10,
+  });
+  const [saving, setSaving] = useState(false);
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    const payload = { ...f, sort_order: Number(f.sort_order) };
+    const { error } = initial
+      ? await supabase.from("payment_gateways").update(payload).eq("id", initial.id)
+      : await supabase.from("payment_gateways").insert(payload);
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Enregistré"); onDone();
+  };
+  return (
+    <form onSubmit={submit} className="space-y-3">
+      <div className="grid grid-cols-2 gap-2">
+        <div><Label>Nom technique</Label><Input required value={f.method_name} onChange={(e) => setF({ ...f, method_name: e.target.value })} /></div>
+        <div><Label>Nom affiché</Label><Input required value={f.display_name} onChange={(e) => setF({ ...f, display_name: e.target.value })} /></div>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <Label>Catégorie</Label>
+          <Select value={f.category} onValueChange={(v) => setF({ ...f, category: v })}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="MOBILE_MONEY">Mobile Money</SelectItem>
+              <SelectItem value="CRYPTO">Crypto</SelectItem>
+              <SelectItem value="CARD">Carte bancaire</SelectItem>
+              <SelectItem value="BANK">Banque</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div><Label>Emoji</Label><Input value={f.logo_emoji} onChange={(e) => setF({ ...f, logo_emoji: e.target.value })} /></div>
+      </div>
+      <div><Label>Compte / adresse</Label><Input value={f.account_details} onChange={(e) => setF({ ...f, account_details: e.target.value })} /></div>
+      <div><Label>Deep link (variables: {"{{ACCOUNT}} {{AMOUNT}}"})</Label><Input value={f.deep_link_template} onChange={(e) => setF({ ...f, deep_link_template: e.target.value })} /></div>
+      <div><Label>USSD dépôt</Label><Input value={f.ussd_deposit_template} onChange={(e) => setF({ ...f, ussd_deposit_template: e.target.value })} placeholder="*133*1*1*{{ACCOUNT}}*{{AMOUNT}}#" /></div>
+      <div><Label>USSD retrait ({"{{PHONE}} {{AMOUNT}}"})</Label><Input value={f.ussd_payout_template} onChange={(e) => setF({ ...f, ussd_payout_template: e.target.value })} placeholder="*122*4*{{PHONE}}*{{AMOUNT}}#" /></div>
+      <div><Label>Instructions</Label><Textarea value={f.instructions} onChange={(e) => setF({ ...f, instructions: e.target.value })} /></div>
+      <div><Label>Ordre</Label><Input type="number" value={f.sort_order} onChange={(e) => setF({ ...f, sort_order: Number(e.target.value) })} /></div>
+      <Button type="submit" disabled={saving} className="w-full bg-gradient-primary border-0">{saving ? "..." : "Enregistrer"}</Button>
+    </form>
+  );
+}
+
+// ============ FINANCE LEDGER ============
+function FinanceLedger() {
+  const qc = useQueryClient();
+  const [filter, setFilter] = useState<string>("ALL");
+  const { data: rows = [] } = useQuery({
+    queryKey: ["admin-fin-tx", filter],
+    queryFn: async () => {
+      let q = supabase.from("financial_transactions").select("*, payment_gateways(display_name, logo_emoji, ussd_payout_template)").order("created_at", { ascending: false }).limit(150);
+      if (filter !== "ALL") q = q.eq("type", filter as any);
+      return (await q).data ?? [];
+    },
+  });
+
+  useEffect(() => {
+    const ch = supabase.channel("admin-fin-tx")
+      .on("postgres_changes", { event: "*", schema: "public", table: "financial_transactions" }, () => qc.invalidateQueries({ queryKey: ["admin-fin-tx"] }))
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [qc]);
+
+  const update = async (id: string, patch: any) => {
+    const { error } = await supabase.from("financial_transactions").update(patch).eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Mis à jour");
+  };
+  const copy = async (t: string) => { await navigator.clipboard.writeText(t); toast.success("Copié"); };
+
+  return (
+    <>
+      <div className="flex gap-2 mb-4">
+        {["ALL","RECHARGE","WITHDRAWAL","PURCHASE"].map((v) => (
+          <Button key={v} size="sm" variant={filter === v ? "default" : "outline"} onClick={() => setFilter(v)}>{v}</Button>
+        ))}
+      </div>
+      <div className="space-y-3">
+        {rows.length === 0 && <p className="text-center text-muted-foreground py-8">Aucune transaction</p>}
+        {rows.map((r: any) => {
+          const compiled = r.compiled_syntax ?? resolveTemplate(r.payment_gateways?.ussd_payout_template, { PHONE: r.destination_account ?? "", AMOUNT: r.amount });
+          return (
+            <Card key={r.id} className="p-4 bg-gradient-card border-border/40">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="font-semibold flex items-center gap-2">
+                    <span className="text-xl">{r.payment_gateways?.logo_emoji ?? "💠"}</span>
+                    {r.type} · {formatXof(Number(r.amount))}
+                    <Badge variant="outline" className="ml-1">{r.status}</Badge>
+                  </p>
+                  <p className="text-xs text-muted-foreground">User: <code>{r.user_id.slice(0,8)}</code> · {new Date(r.created_at).toLocaleString("fr-FR")}</p>
+                  <p className="text-xs">Méthode : {r.payment_method}</p>
+                  {r.transaction_reference && <p className="text-xs">Réf: <code>{r.transaction_reference}</code></p>}
+                  {r.destination_account && <p className="text-xs">Vers: <code>{r.destination_account}</code> {r.destination_name && `(${r.destination_name})`}</p>}
+                  {r.proof_url && <a className="text-xs underline text-primary-glow" href={r.proof_url} target="_blank" rel="noreferrer">Preuve</a>}
+                </div>
+                <div className="flex flex-col items-end gap-2">
+                  {r.type === "WITHDRAWAL" && compiled && (
+                    <div className="flex items-center gap-1 bg-primary/10 border border-primary/30 rounded px-2 py-1">
+                      <code className="text-xs font-bold">{compiled}</code>
+                      <Button size="icon" variant="ghost" onClick={() => copy(compiled)}><Copy className="h-3 w-3" /></Button>
+                    </div>
+                  )}
+                  {r.status === "PENDING" && (
+                    <div className="flex gap-2">
+                      {r.type === "RECHARGE" && (
+                        <Button size="sm" onClick={() => update(r.id, { status: "APPROVED" })} className="bg-gold text-background border-0">
+                          <CheckCircle2 className="h-4 w-4 mr-1" />Créditer
+                        </Button>
+                      )}
+                      {r.type === "WITHDRAWAL" && (
+                        <>
+                          <Button size="sm" onClick={() => update(r.id, { status: "PROCESSING" })} className="bg-primary border-0">
+                            <PlayCircle className="h-4 w-4 mr-1" />Traiter
+                          </Button>
+                        </>
+                      )}
+                      <Button size="sm" variant="outline" onClick={() => update(r.id, { status: "REJECTED" })}>
+                        <XCircle className="h-4 w-4 mr-1" />Rejeter
+                      </Button>
+                    </div>
+                  )}
+                  {r.status === "PROCESSING" && r.type === "WITHDRAWAL" && (
+                    <Button size="sm" onClick={() => update(r.id, { status: "DISBURSED" })} className="bg-gold text-background border-0">
+                      <CheckCircle2 className="h-4 w-4 mr-1" />Marquer décaissé
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+    </>
   );
 }
