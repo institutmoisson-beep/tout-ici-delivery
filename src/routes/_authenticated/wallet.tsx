@@ -86,18 +86,13 @@ function WalletPage() {
       </Card>
 
       <Tabs defaultValue="recharge">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="recharge">Recharger</TabsTrigger>
-          <TabsTrigger value="withdraw">Retirer</TabsTrigger>
           <TabsTrigger value="history">Historique</TabsTrigger>
         </TabsList>
 
         <TabsContent value="recharge" className="mt-6">
           <RechargeFlow />
-        </TabsContent>
-
-        <TabsContent value="withdraw" className="mt-6">
-          <WithdrawFlow balance={Number(wallet?.balance ?? 0)} />
         </TabsContent>
 
         <TabsContent value="history" className="mt-6">
