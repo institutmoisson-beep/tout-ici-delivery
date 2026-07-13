@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatXof, IVORIAN_CITIES } from "@/lib/distance";
 import { Switch } from "@/components/ui/switch";
 import { resolveTemplate } from "@/lib/gateway";
+import { ImageUploader } from "@/components/image-uploader";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
@@ -238,8 +239,8 @@ function RestaurantForm({ onDone }: { onDone: () => void }) {
       </div>
       <Button type="button" variant="outline" size="sm" onClick={usePos}>Utiliser ma position actuelle</Button>
       <div><Label>Prix / km (FCFA)</Label><Input required type="number" value={f.price_per_km} onChange={(e) => setF({ ...f, price_per_km: e.target.value })} /></div>
-      <div><Label>Logo (URL)</Label><Input value={f.logo_url} onChange={(e) => setF({ ...f, logo_url: e.target.value })} /></div>
-      <div><Label>Bannière (URL)</Label><Input value={f.banner_url} onChange={(e) => setF({ ...f, banner_url: e.target.value })} /></div>
+      <ImageUploader label="Logo" folder="restaurants/logos" value={f.logo_url} onChange={(url) => setF({ ...f, logo_url: url })} />
+      <ImageUploader label="Bannière" aspect="wide" folder="restaurants/banners" value={f.banner_url} onChange={(url) => setF({ ...f, banner_url: url })} />
       <div><Label>Horaires</Label><Input value={f.opening_hours} onChange={(e) => setF({ ...f, opening_hours: e.target.value })} placeholder="10h - 22h" /></div>
       <div><Label>Description</Label><Textarea value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} /></div>
       <Button type="submit" disabled={saving} className="w-full bg-gradient-primary border-0">{saving ? "..." : "Créer"}</Button>
@@ -318,7 +319,7 @@ function DishForm({ restaurantId, onDone }: { restaurantId: string; onDone: () =
         <div><Label>Prix (FCFA)</Label><Input required type="number" value={f.price} onChange={(e) => setF({ ...f, price: e.target.value })} /></div>
         <div><Label>Catégorie</Label><Input required value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })} /></div>
       </div>
-      <div><Label>Image (URL)</Label><Input value={f.image_url} onChange={(e) => setF({ ...f, image_url: e.target.value })} /></div>
+      <ImageUploader label="Photo du plat" folder="dishes" value={f.image_url} onChange={(url) => setF({ ...f, image_url: url })} />
       <div><Label>Description</Label><Textarea value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} /></div>
       <Button type="submit" disabled={saving} className="w-full bg-gradient-primary border-0">{saving ? "..." : "Ajouter"}</Button>
     </form>
