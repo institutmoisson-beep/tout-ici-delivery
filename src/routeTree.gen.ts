@@ -9,11 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as RestaurantsRouteImport } from './routes/restaurants'
 import { Route as CguRouteImport } from './routes/cgu'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as RestaurantsIndexRouteImport } from './routes/restaurants.index'
 import { Route as RestaurantsIdRouteImport } from './routes/restaurants.$id'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
 import { Route as AuthenticatedSetupRouteImport } from './routes/_authenticated/setup'
@@ -22,11 +22,6 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedCheckoutRouteImport } from './routes/_authenticated/checkout'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 
-const RestaurantsRoute = RestaurantsRouteImport.update({
-  id: '/restaurants',
-  path: '/restaurants',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const CguRoute = CguRouteImport.update({
   id: '/cgu',
   path: '/cgu',
@@ -46,10 +41,15 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RestaurantsIndexRoute = RestaurantsIndexRouteImport.update({
+  id: '/restaurants/',
+  path: '/restaurants/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RestaurantsIdRoute = RestaurantsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => RestaurantsRoute,
+  id: '/restaurants/$id',
+  path: '/restaurants/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
   id: '/wallet',
@@ -86,7 +86,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/cgu': typeof CguRoute
-  '/restaurants': typeof RestaurantsRouteWithChildren
   '/admin': typeof AuthenticatedAdminRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -94,12 +93,12 @@ export interface FileRoutesByFullPath {
   '/setup': typeof AuthenticatedSetupRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/restaurants/$id': typeof RestaurantsIdRoute
+  '/restaurants/': typeof RestaurantsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/cgu': typeof CguRoute
-  '/restaurants': typeof RestaurantsRouteWithChildren
   '/admin': typeof AuthenticatedAdminRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -107,6 +106,7 @@ export interface FileRoutesByTo {
   '/setup': typeof AuthenticatedSetupRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/restaurants/$id': typeof RestaurantsIdRoute
+  '/restaurants': typeof RestaurantsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -114,7 +114,6 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/cgu': typeof CguRoute
-  '/restaurants': typeof RestaurantsRouteWithChildren
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/checkout': typeof AuthenticatedCheckoutRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -122,6 +121,7 @@ export interface FileRoutesById {
   '/_authenticated/setup': typeof AuthenticatedSetupRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/restaurants/$id': typeof RestaurantsIdRoute
+  '/restaurants/': typeof RestaurantsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -129,7 +129,6 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/cgu'
-    | '/restaurants'
     | '/admin'
     | '/checkout'
     | '/dashboard'
@@ -137,12 +136,12 @@ export interface FileRouteTypes {
     | '/setup'
     | '/wallet'
     | '/restaurants/$id'
+    | '/restaurants/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/cgu'
-    | '/restaurants'
     | '/admin'
     | '/checkout'
     | '/dashboard'
@@ -150,13 +149,13 @@ export interface FileRouteTypes {
     | '/setup'
     | '/wallet'
     | '/restaurants/$id'
+    | '/restaurants'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
     | '/cgu'
-    | '/restaurants'
     | '/_authenticated/admin'
     | '/_authenticated/checkout'
     | '/_authenticated/dashboard'
@@ -164,6 +163,7 @@ export interface FileRouteTypes {
     | '/_authenticated/setup'
     | '/_authenticated/wallet'
     | '/restaurants/$id'
+    | '/restaurants/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -171,18 +171,12 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   CguRoute: typeof CguRoute
-  RestaurantsRoute: typeof RestaurantsRouteWithChildren
+  RestaurantsIdRoute: typeof RestaurantsIdRoute
+  RestaurantsIndexRoute: typeof RestaurantsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/restaurants': {
-      id: '/restaurants'
-      path: '/restaurants'
-      fullPath: '/restaurants'
-      preLoaderRoute: typeof RestaurantsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/cgu': {
       id: '/cgu'
       path: '/cgu'
@@ -211,12 +205,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/restaurants/': {
+      id: '/restaurants/'
+      path: '/restaurants'
+      fullPath: '/restaurants/'
+      preLoaderRoute: typeof RestaurantsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/restaurants/$id': {
       id: '/restaurants/$id'
-      path: '/$id'
+      path: '/restaurants/$id'
       fullPath: '/restaurants/$id'
       preLoaderRoute: typeof RestaurantsIdRouteImport
-      parentRoute: typeof RestaurantsRoute
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/wallet': {
       id: '/_authenticated/wallet'
@@ -284,24 +285,13 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
-interface RestaurantsRouteChildren {
-  RestaurantsIdRoute: typeof RestaurantsIdRoute
-}
-
-const RestaurantsRouteChildren: RestaurantsRouteChildren = {
-  RestaurantsIdRoute: RestaurantsIdRoute,
-}
-
-const RestaurantsRouteWithChildren = RestaurantsRoute._addFileChildren(
-  RestaurantsRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   CguRoute: CguRoute,
-  RestaurantsRoute: RestaurantsRouteWithChildren,
+  RestaurantsIdRoute: RestaurantsIdRoute,
+  RestaurantsIndexRoute: RestaurantsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

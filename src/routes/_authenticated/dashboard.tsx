@@ -120,14 +120,22 @@ function DashboardPage() {
           </h1>
           <p className="text-muted-foreground text-sm">Tableau de bord Tout'ICI</p>
         </div>
-        {isAdmin && (
-          <Link to="/admin">
-            <Button className="bg-gradient-primary shadow-glow border-0">
-              <ShieldCheck className="h-4 w-4 mr-2" />
-              Console Administration
+        <div className="flex flex-wrap gap-2">
+          <Link to="/restaurants">
+            <Button variant="outline">
+              <UtensilsCrossed className="h-4 w-4 mr-2" />
+              Explorer les restaurants
             </Button>
           </Link>
-        )}
+          {isAdmin && (
+            <Link to="/admin">
+              <Button className="bg-gradient-primary shadow-glow border-0">
+                <ShieldCheck className="h-4 w-4 mr-2" />
+                Console Administration
+              </Button>
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Recap grid */}
