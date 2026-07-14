@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Store, UtensilsCrossed, MapPin, Package, Wallet, ShieldCheck, Plus, Trash2, CheckCircle2, XCircle, Facebook, MessageCircle, Zap, Copy, PlayCircle } from "lucide-react";
+import { Store, UtensilsCrossed, MapPin, Package, Wallet, ShieldCheck, Plus, Trash2, CheckCircle2, XCircle, Facebook, MessageCircle, Zap, Copy, PlayCircle, Truck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -46,11 +46,12 @@ function AdminPage() {
       </div>
 
       <Tabs defaultValue="orders">
-        <TabsList className="grid grid-cols-2 md:grid-cols-7 w-full">
+        <TabsList className="grid grid-cols-2 md:grid-cols-8 w-full">
           <TabsTrigger value="orders"><Package className="h-4 w-4 mr-1" />Commandes</TabsTrigger>
           <TabsTrigger value="restaurants"><Store className="h-4 w-4 mr-1" />Restaurants</TabsTrigger>
           <TabsTrigger value="dishes"><UtensilsCrossed className="h-4 w-4 mr-1" />Plats</TabsTrigger>
           <TabsTrigger value="relais"><MapPin className="h-4 w-4 mr-1" />Relais</TabsTrigger>
+          <TabsTrigger value="delivery"><Truck className="h-4 w-4 mr-1" />Livraison</TabsTrigger>
           <TabsTrigger value="recharges"><Wallet className="h-4 w-4 mr-1" />Recharges</TabsTrigger>
           <TabsTrigger value="gateways"><Zap className="h-4 w-4 mr-1" />Passerelles</TabsTrigger>
           <TabsTrigger value="finance"><ShieldCheck className="h-4 w-4 mr-1" />MSN Ledger</TabsTrigger>
@@ -60,6 +61,7 @@ function AdminPage() {
         <TabsContent value="restaurants" className="mt-6"><RestaurantsAdmin /></TabsContent>
         <TabsContent value="dishes" className="mt-6"><DishesAdmin /></TabsContent>
         <TabsContent value="relais" className="mt-6"><RelaisAdmin /></TabsContent>
+        <TabsContent value="delivery" className="mt-6"><DeliveryAdmin /></TabsContent>
         <TabsContent value="recharges" className="mt-6"><RechargesAdmin /></TabsContent>
         <TabsContent value="gateways" className="mt-6"><GatewaysAdmin /></TabsContent>
         <TabsContent value="finance" className="mt-6"><FinanceLedger /></TabsContent>
@@ -330,18 +332,21 @@ function DishForm({ restaurantId, onDone }: { restaurantId: string; onDone: () =
 function RelaisAdmin() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [f, setF] = useState({ city: "Abidjan", neighborhood: "", address_name: "", additional_details: "", opening_hours: "" });
+  const [f, setF] = useState({ city: "Abidjan", neighborhood: "", address_name: "", additional_details: "", opening_hours: "", latitude: "", longitude: "" });
   const { data: relais = [] } = useQuery({
     queryKey: ["admin-relais"],
     queryFn: async () => (await supabase.from("points_relais").select("*").order("city")).data ?? [],
   });
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.from("points_relais").insert(f);
+    const payload: any = { ...f };
+    payload.latitude = f.latitude ? Number(f.latitude) : null;
+    payload.longitude = f.longitude ? Number(f.longitude) : null;
+    const { error } = await supabase.from("points_relais").insert(payload);
     if (error) return toast.error(error.message);
     toast.success("Point relais ajouté");
     setOpen(false);
-    setF({ city: "Abidjan", neighborhood: "", address_name: "", additional_details: "", opening_hours: "" });
+    setF({ city: "Abidjan", neighborhood: "", address_name: "", additional_details: "", opening_hours: "", latitude: "", longitude: "" });
     qc.invalidateQueries({ queryKey: ["admin-relais"] });
   };
   const remove = async (id: string) => { await supabase.from("points_relais").delete().eq("id", id); qc.invalidateQueries({ queryKey: ["admin-relais"] }); };
@@ -364,6 +369,10 @@ function RelaisAdmin() {
               <div><Label>Adresse</Label><Input required value={f.address_name} onChange={(e) => setF({ ...f, address_name: e.target.value })} /></div>
               <div><Label>Détails</Label><Textarea value={f.additional_details} onChange={(e) => setF({ ...f, additional_details: e.target.value })} /></div>
               <div><Label>Horaires</Label><Input value={f.opening_hours} onChange={(e) => setF({ ...f, opening_hours: e.target.value })} placeholder="8h - 20h" /></div>
+              <div className="grid grid-cols-2 gap-2">
+                <div><Label>Latitude</Label><Input type="number" step="0.000001" required value={f.latitude} onChange={(e) => setF({ ...f, latitude: e.target.value })} placeholder="5.3364" /></div>
+                <div><Label>Longitude</Label><Input type="number" step="0.000001" required value={f.longitude} onChange={(e) => setF({ ...f, longitude: e.target.value })} placeholder="-4.0267" /></div>
+              </div>
               <Button type="submit" className="w-full bg-gradient-primary border-0">Créer</Button>
             </form>
           </DialogContent>
@@ -373,12 +382,119 @@ function RelaisAdmin() {
         {relais.map((r) => (
           <Card key={r.id} className="p-4 bg-gradient-card border-border/40 flex items-center gap-3">
             <MapPin className="h-5 w-5 text-primary-glow" />
-            <div className="flex-1"><p className="font-semibold">{r.address_name}</p><p className="text-xs text-muted-foreground">{r.neighborhood}, {r.city} · {r.opening_hours}</p></div>
+            <div className="flex-1">
+              <p className="font-semibold">{r.address_name}</p>
+              <p className="text-xs text-muted-foreground">{r.neighborhood}, {r.city} · {r.opening_hours}</p>
+              {(r as any).latitude && (r as any).longitude ? (
+                <p className="text-xs text-muted-foreground">GPS : {(r as any).latitude}, {(r as any).longitude}</p>
+              ) : (
+                <p className="text-xs text-destructive">⚠ GPS manquant — retrait indisponible</p>
+              )}
+            </div>
             <Button size="icon" variant="outline" onClick={() => remove(r.id)}><Trash2 className="h-4 w-4" /></Button>
           </Card>
         ))}
       </div>
     </>
+  );
+}
+
+// ============ DELIVERY PRICING ============
+function DeliveryAdmin() {
+  const qc = useQueryClient();
+  const { data: pricing } = useQuery({
+    queryKey: ["admin-delivery-pricing"],
+    queryFn: async () => (await supabase.from("delivery_pricing" as any).select("*").maybeSingle()).data as any,
+  });
+  const { data: holidays = [] } = useQuery({
+    queryKey: ["admin-holidays"],
+    queryFn: async () => (await supabase.from("public_holidays" as any).select("*").order("holiday_date")).data as any[] ?? [],
+  });
+  const [form, setForm] = useState<any>(null);
+  const [newDate, setNewDate] = useState("");
+  const [newLabel, setNewLabel] = useState("");
+
+  useEffect(() => { if (pricing) setForm(pricing); }, [pricing]);
+  if (!form) return <p className="text-muted-foreground text-center py-8">Chargement…</p>;
+
+  const save = async () => {
+    const { error } = await supabase.from("delivery_pricing" as any).update({
+      base_per_km: Number(form.base_per_km),
+      minimum_fee: Number(form.minimum_fee),
+      night_start_hour: Number(form.night_start_hour),
+      night_end_hour: Number(form.night_end_hour),
+      night_multiplier: Number(form.night_multiplier),
+      weekend_multiplier: Number(form.weekend_multiplier),
+      holiday_multiplier: Number(form.holiday_multiplier),
+      strike_active: !!form.strike_active,
+      strike_multiplier: Number(form.strike_multiplier),
+      intercity_flat_surcharge: Number(form.intercity_flat_surcharge),
+      updated_at: new Date().toISOString(),
+    }).eq("id", true);
+    if (error) return toast.error(error.message);
+    toast.success("Tarifs enregistrés");
+    qc.invalidateQueries({ queryKey: ["admin-delivery-pricing"] });
+    qc.invalidateQueries({ queryKey: ["delivery-pricing"] });
+  };
+
+  const addHoliday = async () => {
+    if (!newDate || !newLabel) return toast.error("Date + libellé requis");
+    const { error } = await supabase.from("public_holidays" as any).insert({ holiday_date: newDate, label: newLabel });
+    if (error) return toast.error(error.message);
+    setNewDate(""); setNewLabel("");
+    qc.invalidateQueries({ queryKey: ["admin-holidays"] });
+    qc.invalidateQueries({ queryKey: ["public-holidays"] });
+  };
+  const removeHoliday = async (id: string) => {
+    await supabase.from("public_holidays" as any).delete().eq("id", id);
+    qc.invalidateQueries({ queryKey: ["admin-holidays"] });
+    qc.invalidateQueries({ queryKey: ["public-holidays"] });
+  };
+
+  const F = ({ label, k, step = "1" }: { label: string; k: string; step?: string }) => (
+    <div><Label>{label}</Label><Input type="number" step={step} value={form[k] ?? ""} onChange={(e) => setForm({ ...form, [k]: e.target.value })} className="mt-1" /></div>
+  );
+
+  return (
+    <div className="grid lg:grid-cols-2 gap-6">
+      <Card className="p-5 bg-gradient-card border-border/40">
+        <h3 className="font-display text-lg font-semibold mb-4">Tarifs de livraison</h3>
+        <div className="grid grid-cols-2 gap-3">
+          <F label="Tarif par km (FCFA)" k="base_per_km" />
+          <F label="Tarif minimum (FCFA)" k="minimum_fee" />
+          <F label="Début nuit (heure)" k="night_start_hour" />
+          <F label="Fin nuit (heure)" k="night_end_hour" />
+          <F label="Majoration nuit (×)" k="night_multiplier" step="0.01" />
+          <F label="Majoration week-end (×)" k="weekend_multiplier" step="0.01" />
+          <F label="Majoration jour férié (×)" k="holiday_multiplier" step="0.01" />
+          <F label="Majoration grève (×)" k="strike_multiplier" step="0.01" />
+          <F label="Supplément interville (FCFA)" k="intercity_flat_surcharge" />
+          <div className="flex items-end gap-2">
+            <Switch checked={!!form.strike_active} onCheckedChange={(v) => setForm({ ...form, strike_active: v })} />
+            <Label className="mb-2">Grève en cours</Label>
+          </div>
+        </div>
+        <Button onClick={save} className="w-full mt-4 bg-gradient-primary border-0">Enregistrer les tarifs</Button>
+      </Card>
+
+      <Card className="p-5 bg-gradient-card border-border/40">
+        <h3 className="font-display text-lg font-semibold mb-4">Jours fériés</h3>
+        <div className="flex gap-2 mb-4">
+          <Input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} />
+          <Input placeholder="Libellé" value={newLabel} onChange={(e) => setNewLabel(e.target.value)} />
+          <Button onClick={addHoliday} className="bg-gradient-primary border-0"><Plus className="h-4 w-4" /></Button>
+        </div>
+        <div className="space-y-2">
+          {holidays.length === 0 && <p className="text-xs text-muted-foreground">Aucun jour férié configuré.</p>}
+          {holidays.map((h: any) => (
+            <div key={h.id} className="flex items-center justify-between bg-secondary/30 rounded p-2">
+              <span className="text-sm"><b>{h.holiday_date}</b> — {h.label}</span>
+              <Button size="icon" variant="ghost" onClick={() => removeHoliday(h.id)}><Trash2 className="h-3 w-3" /></Button>
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
   );
 }
 
@@ -391,19 +507,8 @@ function RechargesAdmin() {
   });
 
   const process = async (r: any, approve: boolean) => {
-    if (approve) {
-      const { data: w } = await supabase.from("wallets").select("balance").eq("user_id", r.user_id).maybeSingle();
-      const newBalance = Number(w?.balance ?? 0) + Number(r.amount);
-      await supabase.from("wallets").update({ balance: newBalance, updated_at: new Date().toISOString() }).eq("user_id", r.user_id);
-      await supabase.from("wallet_transactions").insert({
-        user_id: r.user_id, type: "RECHARGE", amount: r.amount, balance_after: newBalance,
-        reference: `Recharge ${r.payment_channel} (${r.payment_ref})`,
-      });
-    }
-    await supabase.from("recharge_requests").update({
-      status: approve ? "APPROVED" : "REJECTED",
-      processed_at: new Date().toISOString(),
-    }).eq("id", r.id);
+    const { error } = await supabase.rpc("admin_approve_recharge" as any, { p_recharge_id: r.id, p_approve: approve });
+    if (error) return toast.error(error.message);
     toast.success(approve ? "Créditée" : "Rejetée");
     qc.invalidateQueries({ queryKey: ["admin-recharges"] });
   };
