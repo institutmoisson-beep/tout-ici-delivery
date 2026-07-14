@@ -47,9 +47,9 @@ const RestaurantsIndexRoute = RestaurantsIndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const RestaurantsIdRoute = RestaurantsIdRouteImport.update({
-  id: '/restaurants/$id',
-  path: '/restaurants/$id',
-  getParentRoute: () => rootRouteImport,
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => RestaurantsRoute,
 } as any)
 const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
   id: '/wallet',
@@ -171,7 +171,6 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   CguRoute: typeof CguRoute
-  RestaurantsIdRoute: typeof RestaurantsIdRoute
   RestaurantsIndexRoute: typeof RestaurantsIndexRoute
 }
 
@@ -214,10 +213,10 @@ declare module '@tanstack/react-router' {
     }
     '/restaurants/$id': {
       id: '/restaurants/$id'
-      path: '/restaurants/$id'
+      path: '/$id'
       fullPath: '/restaurants/$id'
       preLoaderRoute: typeof RestaurantsIdRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof RestaurantsRoute
     }
     '/_authenticated/wallet': {
       id: '/_authenticated/wallet'
@@ -290,9 +289,18 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   CguRoute: CguRoute,
-  RestaurantsIdRoute: RestaurantsIdRoute,
   RestaurantsIndexRoute: RestaurantsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
