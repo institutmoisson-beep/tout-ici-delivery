@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-export const Route = createFileRoute("/restaurants")({
+export const Route = createFileRoute("/restaurants/")({
   head: () => ({
     meta: [
       { title: "Restaurants — Tout'ICI" },
