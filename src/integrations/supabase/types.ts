@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      delivery_pricing: {
+        Row: {
+          base_per_km: number
+          holiday_multiplier: number
+          id: boolean
+          intercity_flat_surcharge: number
+          minimum_fee: number
+          night_end_hour: number
+          night_multiplier: number
+          night_start_hour: number
+          strike_active: boolean
+          strike_multiplier: number
+          updated_at: string
+          weekend_multiplier: number
+        }
+        Insert: {
+          base_per_km?: number
+          holiday_multiplier?: number
+          id?: boolean
+          intercity_flat_surcharge?: number
+          minimum_fee?: number
+          night_end_hour?: number
+          night_multiplier?: number
+          night_start_hour?: number
+          strike_active?: boolean
+          strike_multiplier?: number
+          updated_at?: string
+          weekend_multiplier?: number
+        }
+        Update: {
+          base_per_km?: number
+          holiday_multiplier?: number
+          id?: boolean
+          intercity_flat_surcharge?: number
+          minimum_fee?: number
+          night_end_hour?: number
+          night_multiplier?: number
+          night_start_hour?: number
+          strike_active?: boolean
+          strike_multiplier?: number
+          updated_at?: string
+          weekend_multiplier?: number
+        }
+        Relationships: []
+      }
       dishes: {
         Row: {
           category: string
@@ -291,6 +336,8 @@ export type Database = {
           created_at: string
           id: string
           is_active: boolean
+          latitude: number | null
+          longitude: number | null
           neighborhood: string
           opening_hours: string | null
         }
@@ -301,6 +348,8 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          latitude?: number | null
+          longitude?: number | null
           neighborhood: string
           opening_hours?: string | null
         }
@@ -311,6 +360,8 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          latitude?: number | null
+          longitude?: number | null
           neighborhood?: string
           opening_hours?: string | null
         }
@@ -349,6 +400,27 @@ export type Database = {
           id?: string
           location_updated_at?: string | null
           phone?: string | null
+        }
+        Relationships: []
+      }
+      public_holidays: {
+        Row: {
+          created_at: string
+          holiday_date: string
+          id: string
+          label: string
+        }
+        Insert: {
+          created_at?: string
+          holiday_date: string
+          id?: string
+          label: string
+        }
+        Update: {
+          created_at?: string
+          holiday_date?: string
+          id?: string
+          label?: string
         }
         Relationships: []
       }
@@ -716,6 +788,10 @@ export type Database = {
             }
             Returns: string
           }
+      admin_approve_recharge: {
+        Args: { p_approve: boolean; p_recharge_id: string }
+        Returns: undefined
+      }
       calculate_distance_km: {
         Args: { lat1: number; lat2: number; lng1: number; lng2: number }
         Returns: number
@@ -862,6 +938,7 @@ export type Database = {
         Returns: boolean
       }
       longtransactionsenabled: { Args: never; Returns: boolean }
+      pay_order_with_wallet: { Args: { p_order_id: string }; Returns: number }
       populate_geometry_columns:
         | { Args: { tbl_oid: unknown; use_typmod?: boolean }; Returns: number }
         | { Args: { use_typmod?: boolean }; Returns: string }
@@ -1497,7 +1574,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
-      delivery_mode: "EXPRESS" | "RELAIS"
+      delivery_mode: "EXPRESS" | "RELAIS" | "PICKUP"
       fin_tx_status:
         | "PENDING"
         | "PROCESSING"
@@ -1650,7 +1727,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
-      delivery_mode: ["EXPRESS", "RELAIS"],
+      delivery_mode: ["EXPRESS", "RELAIS", "PICKUP"],
       fin_tx_status: [
         "PENDING",
         "PROCESSING",

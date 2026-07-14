@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { CalendarIcon, MapPin, Navigation, AlertTriangle, Wallet, CreditCard, Banknote, Trash2 } from "lucide-react";
+import { CalendarIcon, MapPin, Navigation, AlertTriangle, Wallet, Banknote, Trash2, Store } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,8 +30,9 @@ function CheckoutPage() {
   const { items, restaurantId, subtotal, updateQty, removeItem, clear } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const qc = useQueryClient();
 
-  const [mode, setMode] = useState<"EXPRESS" | "RELAIS">("EXPRESS");
+  const [mode, setMode] = useState<"EXPRESS" | "RELAIS" | "PICKUP">("PICKUP");
   const [pointRelaisId, setPointRelaisId] = useState<string>("");
   const [clientCoords, setClientCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [address, setAddress] = useState("");
@@ -39,7 +40,7 @@ function CheckoutPage() {
   const [scheduled, setScheduled] = useState(false);
   const [scheduledDate, setScheduledDate] = useState<Date | undefined>();
   const [scheduledTime, setScheduledTime] = useState("12:00");
-  const [payment, setPayment] = useState<"WALLET" | "SMARTPAY" | "CASH">("WALLET");
+  const [payment, setPayment] = useState<"WALLET" | "CASH">("WALLET");
   const [cguAccepted, setCguAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -53,12 +54,22 @@ function CheckoutPage() {
   });
 
   const { data: relais = [] } = useQuery({
-    queryKey: ["relais", restaurant?.city],
+    queryKey: ["relais-all"],
     enabled: !!restaurant,
     queryFn: async () => {
-      const { data } = await supabase.from("points_relais").select("*").eq("is_active", true).eq("city", restaurant!.city);
+      const { data } = await supabase.from("points_relais").select("*").eq("is_active", true).order("city");
       return data ?? [];
     },
+  });
+
+  const { data: pricing } = useQuery({
+    queryKey: ["delivery-pricing"],
+    queryFn: async () => (await supabase.from("delivery_pricing" as any).select("*").maybeSingle()).data as any,
+  });
+
+  const { data: holidays = [] } = useQuery({
+    queryKey: ["public-holidays"],
+    queryFn: async () => (await supabase.from("public_holidays" as any).select("holiday_date")).data as any[] ?? [],
   });
 
   const { data: wallet } = useQuery({
@@ -88,11 +99,47 @@ function CheckoutPage() {
     return haversineKm(restaurant.latitude, restaurant.longitude, clientCoords.lat, clientCoords.lng);
   }, [mode, restaurant, clientCoords]);
 
-  const deliveryFee = useMemo(() => {
-    if (mode === "RELAIS") return 0;
-    if (!distanceKm || !restaurant) return 0;
-    return Math.round(distanceKm * Number(restaurant.price_per_km));
-  }, [mode, distanceKm, restaurant]);
+  const selectedRelais = useMemo(
+    () => (relais as any[]).find((r) => r.id === pointRelaisId) ?? null,
+    [relais, pointRelaisId]
+  );
+
+  const relaisDistanceKm = useMemo(() => {
+    if (mode !== "RELAIS" || !restaurant || !selectedRelais?.latitude || !selectedRelais?.longitude) return null;
+    return haversineKm(restaurant.latitude, restaurant.longitude, selectedRelais.latitude, selectedRelais.longitude);
+  }, [mode, restaurant, selectedRelais]);
+
+  const { fee: deliveryFee, breakdown } = useMemo(() => {
+    if (mode === "PICKUP") return { fee: 0, breakdown: [] as string[] };
+    if (!pricing) return { fee: 0, breakdown: [] };
+    const now = scheduled && scheduledDate ? new Date(`${format(scheduledDate, "yyyy-MM-dd")}T${scheduledTime}:00`) : new Date();
+    const hour = now.getHours();
+    const dow = now.getDay();
+    const nightStart = Number(pricing.night_start_hour);
+    const nightEnd = Number(pricing.night_end_hour);
+    const isNight = nightStart > nightEnd ? hour >= nightStart || hour < nightEnd : hour >= nightStart && hour < nightEnd;
+    const isWeekend = dow === 0 || dow === 6;
+    const dateStr = format(now, "yyyy-MM-dd");
+    const isHoliday = holidays.some((h: any) => h.holiday_date === dateStr);
+    const isStrike = !!pricing.strike_active;
+
+    let km = 0;
+    if (mode === "EXPRESS") km = distanceKm ?? 0;
+    else if (mode === "RELAIS") km = relaisDistanceKm ?? 0;
+    if (km === 0) return { fee: 0, breakdown: [] };
+
+    let base = km * Number(pricing.base_per_km);
+    const bd: string[] = [`${km} km × ${formatXof(Number(pricing.base_per_km))}/km`];
+    if (isNight) { base *= Number(pricing.night_multiplier); bd.push(`Nuit ×${pricing.night_multiplier}`); }
+    if (isHoliday) { base *= Number(pricing.holiday_multiplier); bd.push(`Férié ×${pricing.holiday_multiplier}`); }
+    else if (isWeekend) { base *= Number(pricing.weekend_multiplier); bd.push(`Week-end ×${pricing.weekend_multiplier}`); }
+    if (isStrike) { base *= Number(pricing.strike_multiplier); bd.push(`Grève ×${pricing.strike_multiplier}`); }
+    const isIntercity = mode === "RELAIS" && selectedRelais && restaurant && selectedRelais.city !== restaurant.city;
+    if (isIntercity) { base += Number(pricing.intercity_flat_surcharge); bd.push(`Interville +${formatXof(Number(pricing.intercity_flat_surcharge))}`); }
+    const fee = Math.max(Math.round(base), Number(pricing.minimum_fee));
+    if (fee === Number(pricing.minimum_fee)) bd.push(`Minimum : ${formatXof(fee)}`);
+    return { fee, breakdown: bd };
+  }, [mode, pricing, holidays, distanceKm, relaisDistanceKm, scheduled, scheduledDate, scheduledTime, selectedRelais, restaurant]);
 
   const isLongDistance = (distanceKm ?? 0) > 15;
   const total = subtotal + deliveryFee;
@@ -151,7 +198,7 @@ function CheckoutPage() {
         client_latitude: clientCoords?.lat,
         client_longitude: clientCoords?.lng,
         client_address: address || null,
-        calculated_distance_km: distanceKm,
+        calculated_distance_km: mode === "EXPRESS" ? distanceKm : relaisDistanceKm,
         is_intercity: isLongDistance,
         subtotal,
         delivery_fee: deliveryFee,
@@ -162,18 +209,12 @@ function CheckoutPage() {
 
       if (error) throw error;
 
-      // Debit wallet if applicable
-      if (payment === "WALLET" && wallet) {
-        const newBalance = Number(wallet.balance) - total;
-        await supabase.from("wallets").update({ balance: newBalance, updated_at: new Date().toISOString() }).eq("user_id", user.id);
-        await supabase.from("wallet_transactions").insert({
-          user_id: user.id,
-          type: "DEBIT",
-          amount: total,
-          balance_after: newBalance,
-          reference: `Commande #${order.id.slice(0, 8)}`,
-          order_id: order.id,
-        });
+      // Atomic wallet debit via RPC
+      if (payment === "WALLET") {
+        const { error: rpcErr } = await supabase.rpc("pay_order_with_wallet" as any, { p_order_id: order.id });
+        if (rpcErr) throw rpcErr;
+        qc.invalidateQueries({ queryKey: ["wallet"] });
+        qc.invalidateQueries({ queryKey: ["wallet-tx"] });
       }
 
       clear();
@@ -237,14 +278,18 @@ function CheckoutPage() {
           <Card className="p-5 bg-gradient-card border-border/40">
             <h2 className="font-display text-xl font-semibold mb-4">Mode de livraison</h2>
             <RadioGroup value={mode} onValueChange={(v: any) => setMode(v)}>
-              <div className="grid sm:grid-cols-2 gap-3">
+              <div className="grid sm:grid-cols-3 gap-3">
+                <label className={cn("border rounded-xl p-4 cursor-pointer transition", mode === "PICKUP" ? "border-primary bg-primary/10" : "border-border/50")}>
+                  <div className="flex items-center gap-2 font-semibold"><RadioGroupItem value="PICKUP" /><Store className="h-4 w-4" />Sur place</div>
+                  <p className="text-xs text-muted-foreground mt-2">Retrait au restaurant · <span className="text-gold font-semibold">gratuit</span></p>
+                </label>
                 <label className={cn("border rounded-xl p-4 cursor-pointer transition", mode === "EXPRESS" ? "border-primary bg-primary/10" : "border-border/50")}>
                   <div className="flex items-center gap-2 font-semibold"><RadioGroupItem value="EXPRESS" /><Navigation className="h-4 w-4" />Express à domicile</div>
                   <p className="text-xs text-muted-foreground mt-2">Calcul GPS au km réel</p>
                 </label>
                 <label className={cn("border rounded-xl p-4 cursor-pointer transition", mode === "RELAIS" ? "border-primary bg-primary/10" : "border-border/50")}>
                   <div className="flex items-center gap-2 font-semibold"><RadioGroupItem value="RELAIS" /><MapPin className="h-4 w-4" />Point relais</div>
-                  <p className="text-xs text-muted-foreground mt-2">Retrait sur place · gratuit</p>
+                  <p className="text-xs text-muted-foreground mt-2">Retrait dans un point relais · payant</p>
                 </label>
               </div>
             </RadioGroup>
@@ -276,16 +321,28 @@ function CheckoutPage() {
 
             {mode === "RELAIS" && (
               <div className="mt-4">
-                <Label>Choisir un point relais dans {restaurant?.city}</Label>
+                <Label>Choisir un point relais (toutes villes)</Label>
                 <Select value={pointRelaisId} onValueChange={setPointRelaisId}>
                   <SelectTrigger className="mt-2"><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
                   <SelectContent>
-                    {relais.length === 0 && <div className="p-3 text-sm text-muted-foreground">Aucun point relais disponible dans cette ville</div>}
-                    {relais.map((r) => (
-                      <SelectItem key={r.id} value={r.id}>{r.address_name} — {r.neighborhood}</SelectItem>
+                    {relais.length === 0 && <div className="p-3 text-sm text-muted-foreground">Aucun point relais disponible</div>}
+                    {relais.map((r: any) => (
+                      <SelectItem key={r.id} value={r.id}>{r.city} · {r.address_name} — {r.neighborhood}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                {selectedRelais && !selectedRelais.latitude && (
+                  <Alert className="mt-3 border-accent/50 bg-accent/10">
+                    <AlertTriangle className="h-4 w-4 text-accent" />
+                    <AlertDescription className="text-xs">Ce point relais n'a pas de coordonnées GPS. L'administrateur doit les renseigner pour calculer la tarification.</AlertDescription>
+                  </Alert>
+                )}
+                {relaisDistanceKm !== null && (
+                  <div className="text-sm p-3 rounded-lg bg-secondary/50 mt-3 flex items-center justify-between">
+                    <span>Distance restaurant → relais</span>
+                    <span className="font-semibold text-primary-glow">{relaisDistanceKm} km</span>
+                  </div>
+                )}
               </div>
             )}
           </Card>
@@ -319,7 +376,6 @@ function CheckoutPage() {
             <h2 className="font-display text-xl font-semibold mb-4">Paiement</h2>
             <RadioGroup value={payment} onValueChange={(v: any) => setPayment(v)} className="space-y-2">
               <PaymentOption value="WALLET" icon={Wallet} label={`Wallet Tout'ICI (Solde : ${formatXof(Number(wallet?.balance ?? 0))})`} />
-              <PaymentOption value="SMARTPAY" icon={CreditCard} label="SmartPay (Mobile Money / Carte)" />
               <PaymentOption value="CASH" icon={Banknote} label="Paiement à la livraison" disabled={isLongDistance} note={isLongDistance ? "Indisponible pour les commandes > 15 km" : undefined} />
             </RadioGroup>
           </Card>
@@ -342,7 +398,12 @@ function CheckoutPage() {
           <dl className="space-y-2 text-sm">
             <Row label="Sous-total" value={formatXof(subtotal)} />
             <Row label="Livraison" value={formatXof(deliveryFee)} />
-            {distanceKm !== null && <Row label="Distance" value={`${distanceKm} km`} />}
+            {breakdown.length > 0 && (
+              <div className="text-xs text-muted-foreground pl-1 space-y-0.5">
+                {breakdown.map((b, i) => <div key={i}>· {b}</div>)}
+              </div>
+            )}
+            {distanceKm !== null && mode === "EXPRESS" && <Row label="Distance" value={`${distanceKm} km`} />}
             <div className="border-t border-border/50 pt-2 mt-2">
               <Row label="Total" value={formatXof(total)} big />
             </div>
