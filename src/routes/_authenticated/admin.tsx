@@ -329,6 +329,7 @@ function DishesAdmin() {
   const qc = useQueryClient();
   const [restId, setRestId] = useState<string>("");
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<any>(null);
   const { data: restaurants = [] } = useQuery({
     queryKey: ["admin-restaurants-min"],
     queryFn: async () => (await supabase.from("restaurants").select("id,name")).data ?? [],
@@ -353,13 +354,7 @@ function DishesAdmin() {
           <SelectContent>{restaurants.map((r) => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}</SelectContent>
         </Select>
         {restId && (
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild><Button className="bg-gradient-primary border-0"><Plus className="h-4 w-4 mr-1" />Nouveau plat</Button></DialogTrigger>
-            <DialogContent className="bg-card">
-              <DialogHeader><DialogTitle>Ajouter un plat</DialogTitle></DialogHeader>
-              <DishForm restaurantId={restId} onDone={() => { setOpen(false); qc.invalidateQueries({ queryKey: ["admin-dishes"] }); }} />
-            </DialogContent>
-          </Dialog>
+          <Button className="bg-gradient-primary border-0" onClick={() => { setEditing(null); setOpen(true); }}><Plus className="h-4 w-4 mr-1" />Nouveau plat</Button>
         )}
       </div>
       <div className="grid gap-3">
@@ -369,24 +364,40 @@ function DishesAdmin() {
               {d.image_url ? <img src={d.image_url} className="h-full w-full object-cover" /> : <span>🍽️</span>}
             </div>
             <div className="flex-1"><p className="font-semibold">{d.name}</p><p className="text-xs text-muted-foreground">{d.category} · {formatXof(Number(d.price))}</p></div>
+            <Button size="icon" variant="outline" onClick={() => { setEditing(d); setOpen(true); }} title="Modifier"><Pencil className="h-4 w-4" /></Button>
             <Button size="icon" variant="outline" onClick={() => remove(d.id)}><Trash2 className="h-4 w-4" /></Button>
           </Card>
         ))}
       </div>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="bg-card">
+          <DialogHeader><DialogTitle>{editing ? "Modifier" : "Ajouter"} un plat</DialogTitle></DialogHeader>
+          <DishForm restaurantId={restId} initial={editing} onDone={() => { setOpen(false); setEditing(null); qc.invalidateQueries({ queryKey: ["admin-dishes"] }); }} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
-function DishForm({ restaurantId, onDone }: { restaurantId: string; onDone: () => void }) {
-  const [f, setF] = useState({ name: "", price: "", category: "Plat principal", description: "", image_url: "" });
+function DishForm({ restaurantId, initial, onDone }: { restaurantId: string; initial?: any; onDone: () => void }) {
+  const [f, setF] = useState({
+    name: initial?.name ?? "",
+    price: initial?.price?.toString() ?? "",
+    category: initial?.category ?? "Plat principal",
+    description: initial?.description ?? "",
+    image_url: initial?.image_url ?? "",
+  });
   const [saving, setSaving] = useState(false);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    const { error } = await supabase.from("dishes").insert({ ...f, price: parseFloat(f.price), restaurant_id: restaurantId });
+    const payload = { ...f, price: parseFloat(f.price), restaurant_id: restaurantId };
+    const { error } = initial
+      ? await supabase.from("dishes").update(payload).eq("id", initial.id)
+      : await supabase.from("dishes").insert(payload);
     setSaving(false);
     if (error) return toast.error(error.message);
-    toast.success("Plat ajouté"); onDone();
+    toast.success(initial ? "Plat mis à jour" : "Plat ajouté"); onDone();
   };
   return (
     <form onSubmit={submit} className="space-y-3">
@@ -397,7 +408,7 @@ function DishForm({ restaurantId, onDone }: { restaurantId: string; onDone: () =
       </div>
       <ImageUploader label="Photo du plat" folder="dishes" value={f.image_url} onChange={(url) => setF({ ...f, image_url: url })} />
       <div><Label>Description</Label><Textarea value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} /></div>
-      <Button type="submit" disabled={saving} className="w-full bg-gradient-primary border-0">{saving ? "..." : "Ajouter"}</Button>
+      <Button type="submit" disabled={saving} className="w-full bg-gradient-primary border-0">{saving ? "..." : initial ? "Enregistrer" : "Ajouter"}</Button>
     </form>
   );
 }
