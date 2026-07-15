@@ -23,6 +23,29 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
 });
 
+type Period = "ALL" | "DAY" | "MONTH" | "YEAR";
+const periodLabel: Record<Period, string> = { ALL: "Tout", DAY: "Aujourd'hui", MONTH: "Ce mois", YEAR: "Cette année" };
+function periodStart(period: Period): string | null {
+  const now = new Date();
+  switch (period) {
+    case "DAY": return new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+    case "MONTH": return new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    case "YEAR": return new Date(now.getFullYear(), 0, 1).toISOString();
+    default: return null;
+  }
+}
+function PeriodFilter({ value, onChange }: { value: Period; onChange: (p: Period) => void }) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {(["ALL", "DAY", "MONTH", "YEAR"] as Period[]).map((p) => (
+        <Button key={p} size="sm" variant={value === p ? "default" : "outline"} onClick={() => onChange(p)}>
+          {periodLabel[p]}
+        </Button>
+      ))}
+    </div>
+  );
+}
+
 function AdminPage() {
   const { isAdmin, loading } = useAuth();
   const navigate = useNavigate();
@@ -45,8 +68,9 @@ function AdminPage() {
         <h1 className="font-display text-3xl md:text-4xl font-bold">Console Admin</h1>
       </div>
 
-      <Tabs defaultValue="orders">
-        <TabsList className="grid grid-cols-2 md:grid-cols-8 w-full">
+      <Tabs defaultValue="dashboard">
+        <TabsList className="grid grid-cols-2 md:grid-cols-9 w-full">
+          <TabsTrigger value="dashboard"><ShieldCheck className="h-4 w-4 mr-1" />Tableau de bord</TabsTrigger>
           <TabsTrigger value="orders"><Package className="h-4 w-4 mr-1" />Commandes</TabsTrigger>
           <TabsTrigger value="restaurants"><Store className="h-4 w-4 mr-1" />Restaurants</TabsTrigger>
           <TabsTrigger value="dishes"><UtensilsCrossed className="h-4 w-4 mr-1" />Plats</TabsTrigger>
@@ -57,6 +81,7 @@ function AdminPage() {
           <TabsTrigger value="finance"><ShieldCheck className="h-4 w-4 mr-1" />MSN Ledger</TabsTrigger>
         </TabsList>
 
+        <TabsContent value="dashboard" className="mt-6"><AdminDashboard /></TabsContent>
         <TabsContent value="orders" className="mt-6"><OrdersLedger /></TabsContent>
         <TabsContent value="restaurants" className="mt-6"><RestaurantsAdmin /></TabsContent>
         <TabsContent value="dishes" className="mt-6"><DishesAdmin /></TabsContent>
@@ -70,12 +95,119 @@ function AdminPage() {
   );
 }
 
+// ============ DASHBOARD ============
+function StatCard({ label, value, sub, highlight }: { label: string; value: number | string; sub?: string; highlight?: boolean }) {
+  return (
+    <Card className={`p-4 bg-gradient-card border-border/40 ${highlight ? "border-gold/60 bg-gold/5" : ""}`}>
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="font-display text-2xl font-bold">{value}</p>
+      {sub && <p className="text-xs text-primary-glow mt-1">{sub}</p>}
+    </Card>
+  );
+}
+
+function AdminDashboard() {
+  const qc = useQueryClient();
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ["admin-dashboard"],
+    queryFn: async () => {
+      const startDay = periodStart("DAY")!;
+      const startMonth = periodStart("MONTH")!;
+      const startYear = periodStart("YEAR")!;
+
+      const ordersRange = async (from?: string) => {
+        let q = supabase.from("orders").select("total_amount", { count: "exact" });
+        if (from) q = q.gte("created_at", from);
+        const { data, count } = await q;
+        const revenue = (data ?? []).reduce((s: number, r: any) => s + Number(r.total_amount ?? 0), 0);
+        return { count: count ?? 0, revenue };
+      };
+      const countRange = async (table: string, from?: string, extra?: (q: any) => any) => {
+        let q = supabase.from(table as any).select("id", { count: "exact", head: true });
+        if (from) q = q.gte("created_at", from);
+        if (extra) q = extra(q);
+        const { count } = await q;
+        return count ?? 0;
+      };
+
+      const [day, month, year, all, rechargesDay, rechargesMonth, rechargesYear, rechargesTotal, rechargesPending] = await Promise.all([
+        ordersRange(startDay),
+        ordersRange(startMonth),
+        ordersRange(startYear),
+        ordersRange(),
+        countRange("recharge_requests", startDay),
+        countRange("recharge_requests", startMonth),
+        countRange("recharge_requests", startYear),
+        countRange("recharge_requests"),
+        countRange("recharge_requests", undefined, (q) => q.eq("status", "PENDING")),
+      ]);
+
+      return { day, month, year, all, rechargesDay, rechargesMonth, rechargesYear, rechargesTotal, rechargesPending };
+    },
+  });
+
+  useEffect(() => {
+    const ch = supabase.channel("admin-dashboard")
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => qc.invalidateQueries({ queryKey: ["admin-dashboard"] }))
+      .on("postgres_changes", { event: "*", schema: "public", table: "recharge_requests" }, () => qc.invalidateQueries({ queryKey: ["admin-dashboard"] }))
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [qc]);
+
+  if (isLoading || !stats) return <p className="text-center text-muted-foreground py-8">Chargement…</p>;
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <h2 className="font-display text-xl font-semibold mb-3">Commandes</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <StatCard label="Aujourd'hui" value={stats.day.count} sub={formatXof(stats.day.revenue)} />
+          <StatCard label="Ce mois" value={stats.month.count} sub={formatXof(stats.month.revenue)} />
+          <StatCard label="Cette année" value={stats.year.count} sub={formatXof(stats.year.revenue)} />
+          <StatCard label="Total" value={stats.all.count} sub={formatXof(stats.all.revenue)} />
+        </div>
+      </div>
+      <div>
+        <h2 className="font-display text-xl font-semibold mb-3">Demandes de rechargement</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <StatCard label="Aujourd'hui" value={stats.rechargesDay} />
+          <StatCard label="Ce mois" value={stats.rechargesMonth} />
+          <StatCard label="Cette année" value={stats.rechargesYear} />
+          <StatCard label="Total" value={stats.rechargesTotal} />
+        </div>
+        <div className="mt-3">
+          <StatCard label="En attente de traitement" value={stats.rechargesPending} highlight />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ============ ORDERS LEDGER ============
 function OrdersLedger() {
   const qc = useQueryClient();
+  const [period, setPeriod] = useState<Period>("ALL");
+  const [search, setSearch] = useState("");
   const { data: orders = [] } = useQuery({
-    queryKey: ["admin-orders"],
-    queryFn: async () => (await supabase.from("orders").select("*, restaurants(name,city,neighborhood), points_relais(address_name,neighborhood,city), profiles(full_name,phone)").order("created_at", { ascending: false }).limit(100)).data ?? [],
+    queryKey: ["admin-orders", period],
+    queryFn: async () => {
+      let q = supabase.from("orders").select("*, restaurants(name,city,neighborhood), points_relais(address_name,neighborhood,city), profiles(full_name,phone)").order("created_at", { ascending: false }).limit(200);
+      const from = periodStart(period);
+      if (from) q = q.gte("created_at", from);
+      return (await q).data ?? [];
+    },
+  });
+
+  const filteredOrders = orders.filter((o: any) => {
+    if (!search.trim()) return true;
+    const s = search.trim().toLowerCase();
+    return (
+      o.id.toLowerCase().includes(s) ||
+      o.restaurants?.name?.toLowerCase().includes(s) ||
+      o.profiles?.full_name?.toLowerCase().includes(s) ||
+      o.profiles?.phone?.toLowerCase().includes(s) ||
+      o.status?.toLowerCase().includes(s)
+    );
   });
 
   useEffect(() => {
@@ -142,9 +274,20 @@ function OrdersLedger() {
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row gap-2">
+        <Input
+          placeholder="Rechercher (client, téléphone, restaurant, statut, n° commande)..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="sm:max-w-xs"
+        />
+        <PeriodFilter value={period} onChange={setPeriod} />
+      </div>
+
       {orders.length === 0 && <p className="text-center text-muted-foreground py-8">Aucune commande</p>}
-      {orders.map((o: any) => (
+      {orders.length > 0 && filteredOrders.length === 0 && <p className="text-center text-muted-foreground py-8">Aucune commande ne correspond à votre recherche</p>}
+      {filteredOrders.map((o: any) => (
         <Card key={o.id} className="p-4 bg-gradient-card border-border/40">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
@@ -605,12 +748,29 @@ function DeliveryAdmin() {
 }
 
 // ============ RECHARGES ============
+const rechargeStatusLabel: Record<string, string> = { ALL: "Tout", PENDING: "En attente", APPROVED: "Approuvée", REJECTED: "Rejetée" };
+
 function RechargesAdmin() {
   const qc = useQueryClient();
+  const [status, setStatus] = useState<string>("ALL");
+  const [period, setPeriod] = useState<Period>("ALL");
   const { data: recharges = [] } = useQuery({
-    queryKey: ["admin-recharges"],
-    queryFn: async () => (await supabase.from("recharge_requests").select("*, profiles(full_name)").order("created_at", { ascending: false }).limit(100)).data ?? [],
+    queryKey: ["admin-recharges", status, period],
+    queryFn: async () => {
+      let q = supabase.from("recharge_requests").select("*, profiles(full_name)").order("created_at", { ascending: false }).limit(200);
+      if (status !== "ALL") q = q.eq("status", status as any);
+      const from = periodStart(period);
+      if (from) q = q.gte("created_at", from);
+      return (await q).data ?? [];
+    },
   });
+
+  useEffect(() => {
+    const ch = supabase.channel("admin-recharges-list")
+      .on("postgres_changes", { event: "*", schema: "public", table: "recharge_requests" }, () => qc.invalidateQueries({ queryKey: ["admin-recharges"] }))
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [qc]);
 
   const process = async (r: any, approve: boolean) => {
     const { error } = await supabase.rpc("admin_approve_recharge" as any, { p_recharge_id: r.id, p_approve: approve });
@@ -620,7 +780,18 @@ function RechargesAdmin() {
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="flex flex-wrap gap-2">
+          {["ALL", "PENDING", "APPROVED", "REJECTED"].map((v) => (
+            <Button key={v} size="sm" variant={status === v ? "default" : "outline"} onClick={() => setStatus(v)}>
+              {rechargeStatusLabel[v]}
+            </Button>
+          ))}
+        </div>
+        <PeriodFilter value={period} onChange={setPeriod} />
+      </div>
+      <div className="space-y-3">
       {recharges.map((r: any) => (
         <Card key={r.id} className="p-4 bg-gradient-card border-border/40">
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -641,7 +812,8 @@ function RechargesAdmin() {
           </div>
         </Card>
       ))}
-      {recharges.length === 0 && <p className="text-center text-muted-foreground py-8">Aucune demande</p>}
+      {recharges.length === 0 && <p className="text-center text-muted-foreground py-8">Aucune demande ne correspond à ces filtres</p>}
+      </div>
     </div>
   );
 }
