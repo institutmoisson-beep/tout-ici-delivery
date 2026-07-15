@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Store, UtensilsCrossed, MapPin, Package, Wallet, ShieldCheck, Plus, Trash2, CheckCircle2, XCircle, Facebook, MessageCircle, Zap, Copy, PlayCircle, Truck } from "lucide-react";
+import { Store, UtensilsCrossed, MapPin, Package, Wallet, ShieldCheck, Plus, Trash2, CheckCircle2, XCircle, Facebook, MessageCircle, Zap, Copy, PlayCircle, Truck, Pencil, Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
