@@ -69,6 +69,9 @@ export function SiteHeader() {
                 <DropdownMenuItem onClick={() => router.navigate({ to: "/orders" })}>
                   <ShoppingBag className="mr-2 h-4 w-4" />Mes commandes
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.navigate({ to: "/profile" })}>
+                  <UserIcon className="mr-2 h-4 w-4" />Mon profil
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => router.navigate({ to: "/wallet" })}>
                   <Wallet className="mr-2 h-4 w-4" />Mon portefeuille
                 </DropdownMenuItem>
@@ -103,6 +106,7 @@ export function SiteHeader() {
             {user && <Link to="/dashboard" onClick={() => setMobileOpen(false)}>Tableau de bord</Link>}
             {user && <Link to="/orders" onClick={() => setMobileOpen(false)}>Commandes</Link>}
             {user && <Link to="/wallet" onClick={() => setMobileOpen(false)}>Wallet</Link>}
+            {user && <Link to="/profile" onClick={() => setMobileOpen(false)}>Mon profil</Link>}
             {isAdmin && <Link to="/admin" onClick={() => setMobileOpen(false)}>Admin</Link>}
           </nav>
         </div>
