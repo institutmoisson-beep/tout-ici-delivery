@@ -75,7 +75,7 @@ function OrdersLedger() {
   const qc = useQueryClient();
   const { data: orders = [] } = useQuery({
     queryKey: ["admin-orders"],
-    queryFn: async () => (await supabase.from("orders").select("*, restaurants(name,city,neighborhood,phone), points_relais(address_name,neighborhood,city), profiles!user_id(full_name,phone)").order("created_at", { ascending: false }).limit(100)).data ?? [],
+    queryFn: async () => (await supabase.from("orders").select("*, restaurants(name,city,neighborhood), points_relais(address_name,neighborhood,city), profiles(full_name,phone)").order("created_at", { ascending: false }).limit(100)).data ?? [],
   });
 
   useEffect(() => {
