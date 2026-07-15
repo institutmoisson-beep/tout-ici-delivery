@@ -417,51 +417,19 @@ function DishForm({ restaurantId, initial, onDone }: { restaurantId: string; ini
 function RelaisAdmin() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [f, setF] = useState({ city: "Abidjan", neighborhood: "", address_name: "", additional_details: "", opening_hours: "", latitude: "", longitude: "" });
+  const [editing, setEditing] = useState<any>(null);
   const { data: relais = [] } = useQuery({
     queryKey: ["admin-relais"],
     queryFn: async () => (await supabase.from("points_relais").select("*").order("city")).data ?? [],
   });
-  const create = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const payload: any = { ...f };
-    payload.latitude = f.latitude ? Number(f.latitude) : null;
-    payload.longitude = f.longitude ? Number(f.longitude) : null;
-    const { error } = await supabase.from("points_relais").insert(payload);
-    if (error) return toast.error(error.message);
-    toast.success("Point relais ajouté");
-    setOpen(false);
-    setF({ city: "Abidjan", neighborhood: "", address_name: "", additional_details: "", opening_hours: "", latitude: "", longitude: "" });
-    qc.invalidateQueries({ queryKey: ["admin-relais"] });
-  };
   const remove = async (id: string) => { await supabase.from("points_relais").delete().eq("id", id); qc.invalidateQueries({ queryKey: ["admin-relais"] }); };
 
   return (
     <>
       <div className="flex justify-end mb-4">
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild><Button className="bg-gradient-primary border-0"><Plus className="h-4 w-4 mr-1" />Nouveau point relais</Button></DialogTrigger>
-          <DialogContent className="bg-card">
-            <DialogHeader><DialogTitle>Créer un point relais</DialogTitle></DialogHeader>
-            <form onSubmit={create} className="space-y-3">
-              <div><Label>Ville</Label>
-                <Select value={f.city} onValueChange={(v) => setF({ ...f, city: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{IVORIAN_CITIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div><Label>Quartier</Label><Input required value={f.neighborhood} onChange={(e) => setF({ ...f, neighborhood: e.target.value })} /></div>
-              <div><Label>Adresse</Label><Input required value={f.address_name} onChange={(e) => setF({ ...f, address_name: e.target.value })} /></div>
-              <div><Label>Détails</Label><Textarea value={f.additional_details} onChange={(e) => setF({ ...f, additional_details: e.target.value })} /></div>
-              <div><Label>Horaires</Label><Input value={f.opening_hours} onChange={(e) => setF({ ...f, opening_hours: e.target.value })} placeholder="8h - 20h" /></div>
-              <div className="grid grid-cols-2 gap-2">
-                <div><Label>Latitude</Label><Input type="number" step="0.000001" required value={f.latitude} onChange={(e) => setF({ ...f, latitude: e.target.value })} placeholder="5.3364" /></div>
-                <div><Label>Longitude</Label><Input type="number" step="0.000001" required value={f.longitude} onChange={(e) => setF({ ...f, longitude: e.target.value })} placeholder="-4.0267" /></div>
-              </div>
-              <Button type="submit" className="w-full bg-gradient-primary border-0">Créer</Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <Button className="bg-gradient-primary border-0" onClick={() => { setEditing(null); setOpen(true); }}>
+          <Plus className="h-4 w-4 mr-1" />Nouveau point relais
+        </Button>
       </div>
       <div className="grid gap-3">
         {relais.map((r) => (
@@ -476,11 +444,64 @@ function RelaisAdmin() {
                 <p className="text-xs text-destructive">⚠ GPS manquant — retrait indisponible</p>
               )}
             </div>
+            <Button size="icon" variant="outline" onClick={() => { setEditing(r); setOpen(true); }} title="Modifier"><Pencil className="h-4 w-4" /></Button>
             <Button size="icon" variant="outline" onClick={() => remove(r.id)}><Trash2 className="h-4 w-4" /></Button>
           </Card>
         ))}
       </div>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="bg-card">
+          <DialogHeader><DialogTitle>{editing ? "Modifier" : "Créer"} un point relais</DialogTitle></DialogHeader>
+          <RelaisForm initial={editing} onDone={() => { setOpen(false); setEditing(null); qc.invalidateQueries({ queryKey: ["admin-relais"] }); }} />
+        </DialogContent>
+      </Dialog>
     </>
+  );
+}
+
+function RelaisForm({ initial, onDone }: { initial?: any; onDone: () => void }) {
+  const [f, setF] = useState({
+    city: initial?.city ?? "Abidjan",
+    neighborhood: initial?.neighborhood ?? "",
+    address_name: initial?.address_name ?? "",
+    additional_details: initial?.additional_details ?? "",
+    opening_hours: initial?.opening_hours ?? "",
+    latitude: initial?.latitude?.toString() ?? "",
+    longitude: initial?.longitude?.toString() ?? "",
+  });
+  const [saving, setSaving] = useState(false);
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    const payload: any = { ...f };
+    payload.latitude = f.latitude ? Number(f.latitude) : null;
+    payload.longitude = f.longitude ? Number(f.longitude) : null;
+    const { error } = initial
+      ? await supabase.from("points_relais").update(payload).eq("id", initial.id)
+      : await supabase.from("points_relais").insert(payload);
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success(initial ? "Point relais mis à jour" : "Point relais ajouté");
+    onDone();
+  };
+  return (
+    <form onSubmit={submit} className="space-y-3">
+      <div><Label>Ville</Label>
+        <Select value={f.city} onValueChange={(v) => setF({ ...f, city: v })}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>{IVORIAN_CITIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+      <div><Label>Quartier</Label><Input required value={f.neighborhood} onChange={(e) => setF({ ...f, neighborhood: e.target.value })} /></div>
+      <div><Label>Adresse</Label><Input required value={f.address_name} onChange={(e) => setF({ ...f, address_name: e.target.value })} /></div>
+      <div><Label>Détails</Label><Textarea value={f.additional_details} onChange={(e) => setF({ ...f, additional_details: e.target.value })} /></div>
+      <div><Label>Horaires</Label><Input value={f.opening_hours} onChange={(e) => setF({ ...f, opening_hours: e.target.value })} placeholder="8h - 20h" /></div>
+      <div className="grid grid-cols-2 gap-2">
+        <div><Label>Latitude</Label><Input type="number" step="0.000001" required value={f.latitude} onChange={(e) => setF({ ...f, latitude: e.target.value })} placeholder="5.3364" /></div>
+        <div><Label>Longitude</Label><Input type="number" step="0.000001" required value={f.longitude} onChange={(e) => setF({ ...f, longitude: e.target.value })} placeholder="-4.0267" /></div>
+      </div>
+      <Button type="submit" disabled={saving} className="w-full bg-gradient-primary border-0">{saving ? "..." : initial ? "Enregistrer" : "Créer"}</Button>
+    </form>
   );
 }
 
