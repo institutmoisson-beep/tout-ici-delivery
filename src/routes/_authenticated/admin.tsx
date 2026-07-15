@@ -75,7 +75,7 @@ function OrdersLedger() {
   const qc = useQueryClient();
   const { data: orders = [] } = useQuery({
     queryKey: ["admin-orders"],
-    queryFn: async () => (await supabase.from("orders").select("*, restaurants(name,city)").order("created_at", { ascending: false }).limit(100)).data ?? [],
+    queryFn: async () => (await supabase.from("orders").select("*, restaurants(name,city,neighborhood,phone), points_relais(address_name,neighborhood,city), profiles!user_id(full_name,phone)").order("created_at", { ascending: false }).limit(100)).data ?? [],
   });
 
   useEffect(() => {
@@ -91,6 +91,56 @@ function OrdersLedger() {
     toast.success("Statut mis à jour");
   };
 
+  const buildOrderMessage = (o: any) => {
+    const lines: string[] = [];
+    lines.push(`🧾 Commande Tout'ICI #${o.id.slice(0, 8)}`);
+    lines.push(`📅 ${new Date(o.created_at).toLocaleString("fr-FR")}`);
+    lines.push(`🏪 Restaurant : ${o.restaurants?.name ?? "—"} (${o.restaurants?.neighborhood ?? ""}, ${o.restaurants?.city ?? ""})`);
+    lines.push("");
+    lines.push(`👤 Client : ${o.profiles?.full_name ?? "—"}`);
+    if (o.profiles?.phone) lines.push(`📞 ${o.profiles.phone}`);
+    lines.push("");
+    lines.push("🍽️ Articles :");
+    for (const i of (o.items as any[])) {
+      let line = `  • ${i.quantity}× ${i.name} — ${formatXof(Number(i.price ?? 0) * Number(i.quantity ?? 1))}`;
+      if (i.instructions?.length) line += ` [${i.instructions.join(", ")}]`;
+      if (i.custom_note) line += ` (${i.custom_note})`;
+      lines.push(line);
+    }
+    lines.push("");
+    lines.push(`🚚 Mode : ${o.delivery_mode}`);
+    if (o.delivery_mode === "RELAIS" && o.points_relais) {
+      lines.push(`📍 Retrait : ${o.points_relais.address_name} — ${o.points_relais.neighborhood}, ${o.points_relais.city}`);
+    } else if (o.delivery_mode === "EXPRESS") {
+      if (o.client_address) lines.push(`📍 Livraison : ${o.client_address}`);
+      if (o.client_latitude) lines.push(`🗺️ https://maps.google.com/?q=${o.client_latitude},${o.client_longitude}`);
+      if (o.calculated_distance_km) lines.push(`📏 Distance : ${o.calculated_distance_km} km`);
+    } else if (o.delivery_mode === "PICKUP") {
+      lines.push("📍 Retrait sur place au restaurant");
+    }
+    if (o.scheduled_date) lines.push(`⏰ Programmée : ${o.scheduled_date} ${o.scheduled_time ?? ""}`);
+    lines.push("");
+    lines.push(`💰 Sous-total : ${formatXof(Number(o.subtotal))}`);
+    lines.push(`🚚 Livraison : ${formatXof(Number(o.delivery_fee))}`);
+    lines.push(`✅ TOTAL : ${formatXof(Number(o.total_amount))}`);
+    lines.push(`💳 Paiement : ${o.payment_method}`);
+    lines.push(`📌 Statut : ${o.status}`);
+    return lines.join("\n");
+  };
+
+  const shareWhatsApp = (o: any) => {
+    const msg = buildOrderMessage(o);
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
+  };
+  const shareSms = (o: any) => {
+    const msg = buildOrderMessage(o);
+    window.open(`sms:?body=${encodeURIComponent(msg)}`, "_blank");
+  };
+  const copyOrder = async (o: any) => {
+    await navigator.clipboard.writeText(buildOrderMessage(o));
+    toast.success("Commande copiée");
+  };
+
   return (
     <div className="space-y-3">
       {orders.length === 0 && <p className="text-center text-muted-foreground py-8">Aucune commande</p>}
@@ -100,6 +150,9 @@ function OrdersLedger() {
             <div>
               <p className="font-semibold">{o.restaurants?.name} <span className="text-xs text-muted-foreground">#{o.id.slice(0, 8)}</span></p>
               <p className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString("fr-FR")}</p>
+              {o.profiles?.full_name && (
+                <p className="text-xs text-muted-foreground">👤 {o.profiles.full_name}{o.profiles.phone && ` · ${o.profiles.phone}`}</p>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="outline">{o.payment_method}</Badge>
@@ -128,7 +181,11 @@ function OrdersLedger() {
 
           <div className="mt-3 pt-3 border-t border-border/40 flex flex-wrap items-center justify-between gap-2">
             <span className="font-display text-lg text-primary-glow font-bold">{formatXof(Number(o.total_amount))}</span>
-            <Select value={o.status} onValueChange={(v) => updateStatus(o.id, v)}>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button size="icon" variant="outline" onClick={() => shareWhatsApp(o)} title="Partager WhatsApp"><MessageCircle className="h-4 w-4" /></Button>
+              <Button size="icon" variant="outline" onClick={() => shareSms(o)} title="Envoyer par SMS"><Share2 className="h-4 w-4" /></Button>
+              <Button size="icon" variant="outline" onClick={() => copyOrder(o)} title="Copier"><Copy className="h-4 w-4" /></Button>
+              <Select value={o.status} onValueChange={(v) => updateStatus(o.id, v)}>
               <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="PENDING">En attente</SelectItem>
@@ -138,6 +195,7 @@ function OrdersLedger() {
                 <SelectItem value="CANCELLED">Annulée</SelectItem>
               </SelectContent>
             </Select>
+            </div>
           </div>
         </Card>
       ))}
