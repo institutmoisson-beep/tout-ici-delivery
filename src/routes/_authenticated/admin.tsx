@@ -207,6 +207,7 @@ function OrdersLedger() {
 function RestaurantsAdmin() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<any>(null);
   const { data: restaurants = [] } = useQuery({
     queryKey: ["admin-restaurants"],
     queryFn: async () => (await supabase.from("restaurants").select("*").order("created_at", { ascending: false })).data ?? [],
@@ -228,15 +229,9 @@ function RestaurantsAdmin() {
   return (
     <>
       <div className="flex justify-end mb-4">
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-gradient-primary border-0"><Plus className="h-4 w-4 mr-1" />Nouveau stand</Button>
-          </DialogTrigger>
-          <DialogContent className="bg-card max-w-lg max-h-[90vh] overflow-y-auto">
-            <DialogHeader><DialogTitle>Créer un restaurant</DialogTitle></DialogHeader>
-            <RestaurantForm onDone={() => { setOpen(false); qc.invalidateQueries({ queryKey: ["admin-restaurants"] }); }} />
-          </DialogContent>
-        </Dialog>
+        <Button className="bg-gradient-primary border-0" onClick={() => { setEditing(null); setOpen(true); }}>
+          <Plus className="h-4 w-4 mr-1" />Nouveau stand
+        </Button>
       </div>
       <div className="grid gap-3">
         {restaurants.map((r) => (
@@ -251,30 +246,51 @@ function RestaurantsAdmin() {
             <div className="flex gap-1">
               <Button size="icon" variant="outline" onClick={() => share(r, "wa")} title="Partager WhatsApp"><MessageCircle className="h-4 w-4" /></Button>
               <Button size="icon" variant="outline" onClick={() => share(r, "fb")} title="Partager Facebook"><Facebook className="h-4 w-4" /></Button>
+              <Button size="icon" variant="outline" onClick={() => { setEditing(r); setOpen(true); }} title="Modifier"><Pencil className="h-4 w-4" /></Button>
               <Button size="icon" variant="outline" onClick={() => remove(r.id)}><Trash2 className="h-4 w-4" /></Button>
             </div>
           </Card>
         ))}
       </div>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="bg-card max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{editing ? "Modifier" : "Créer"} un restaurant</DialogTitle></DialogHeader>
+          <RestaurantForm initial={editing} onDone={() => { setOpen(false); setEditing(null); qc.invalidateQueries({ queryKey: ["admin-restaurants"] }); }} />
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
 
-function RestaurantForm({ onDone }: { onDone: () => void }) {
-  const [f, setF] = useState({ name: "", city: "Abidjan", neighborhood: "", latitude: "", longitude: "", price_per_km: "300", description: "", logo_url: "", banner_url: "", opening_hours: "" });
+function RestaurantForm({ initial, onDone }: { initial?: any; onDone: () => void }) {
+  const [f, setF] = useState({
+    name: initial?.name ?? "",
+    city: initial?.city ?? "Abidjan",
+    neighborhood: initial?.neighborhood ?? "",
+    latitude: initial?.latitude?.toString() ?? "",
+    longitude: initial?.longitude?.toString() ?? "",
+    price_per_km: initial?.price_per_km?.toString() ?? "300",
+    description: initial?.description ?? "",
+    logo_url: initial?.logo_url ?? "",
+    banner_url: initial?.banner_url ?? "",
+    opening_hours: initial?.opening_hours ?? "",
+  });
   const [saving, setSaving] = useState(false);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    const { error } = await supabase.from("restaurants").insert({
+    const payload = {
       ...f,
       latitude: parseFloat(f.latitude),
       longitude: parseFloat(f.longitude),
       price_per_km: parseFloat(f.price_per_km),
-    });
+    };
+    const { error } = initial
+      ? await supabase.from("restaurants").update(payload).eq("id", initial.id)
+      : await supabase.from("restaurants").insert(payload);
     setSaving(false);
     if (error) return toast.error(error.message);
-    toast.success("Restaurant créé");
+    toast.success(initial ? "Restaurant mis à jour" : "Restaurant créé");
     onDone();
   };
   const usePos = () => {
@@ -303,7 +319,7 @@ function RestaurantForm({ onDone }: { onDone: () => void }) {
       <ImageUploader label="Bannière" aspect="wide" folder="restaurants/banners" value={f.banner_url} onChange={(url) => setF({ ...f, banner_url: url })} />
       <div><Label>Horaires</Label><Input value={f.opening_hours} onChange={(e) => setF({ ...f, opening_hours: e.target.value })} placeholder="10h - 22h" /></div>
       <div><Label>Description</Label><Textarea value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} /></div>
-      <Button type="submit" disabled={saving} className="w-full bg-gradient-primary border-0">{saving ? "..." : "Créer"}</Button>
+      <Button type="submit" disabled={saving} className="w-full bg-gradient-primary border-0">{saving ? "..." : initial ? "Enregistrer" : "Créer"}</Button>
     </form>
   );
 }
