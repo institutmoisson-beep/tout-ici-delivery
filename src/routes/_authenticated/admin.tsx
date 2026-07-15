@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Store, UtensilsCrossed, MapPin, Package, Wallet, ShieldCheck, Plus, Trash2, CheckCircle2, XCircle, Facebook, MessageCircle, Zap, Copy, PlayCircle, Truck } from "lucide-react";
+import { Store, UtensilsCrossed, MapPin, Package, Wallet, ShieldCheck, Plus, Trash2, CheckCircle2, XCircle, Facebook, MessageCircle, Zap, Copy, PlayCircle, Truck, Pencil, Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -75,7 +75,7 @@ function OrdersLedger() {
   const qc = useQueryClient();
   const { data: orders = [] } = useQuery({
     queryKey: ["admin-orders"],
-    queryFn: async () => (await supabase.from("orders").select("*, restaurants(name,city)").order("created_at", { ascending: false }).limit(100)).data ?? [],
+    queryFn: async () => (await supabase.from("orders").select("*, restaurants(name,city,neighborhood), points_relais(address_name,neighborhood,city), profiles(full_name,phone)").order("created_at", { ascending: false }).limit(100)).data ?? [],
   });
 
   useEffect(() => {
@@ -91,6 +91,56 @@ function OrdersLedger() {
     toast.success("Statut mis à jour");
   };
 
+  const buildOrderMessage = (o: any) => {
+    const lines: string[] = [];
+    lines.push(`🧾 Commande Tout'ICI #${o.id.slice(0, 8)}`);
+    lines.push(`📅 ${new Date(o.created_at).toLocaleString("fr-FR")}`);
+    lines.push(`🏪 Restaurant : ${o.restaurants?.name ?? "—"} (${o.restaurants?.neighborhood ?? ""}, ${o.restaurants?.city ?? ""})`);
+    lines.push("");
+    lines.push(`👤 Client : ${o.profiles?.full_name ?? "—"}`);
+    if (o.profiles?.phone) lines.push(`📞 ${o.profiles.phone}`);
+    lines.push("");
+    lines.push("🍽️ Articles :");
+    for (const i of (o.items as any[])) {
+      let line = `  • ${i.quantity}× ${i.name} — ${formatXof(Number(i.price ?? 0) * Number(i.quantity ?? 1))}`;
+      if (i.instructions?.length) line += ` [${i.instructions.join(", ")}]`;
+      if (i.custom_note) line += ` (${i.custom_note})`;
+      lines.push(line);
+    }
+    lines.push("");
+    lines.push(`🚚 Mode : ${o.delivery_mode}`);
+    if (o.delivery_mode === "RELAIS" && o.points_relais) {
+      lines.push(`📍 Retrait : ${o.points_relais.address_name} — ${o.points_relais.neighborhood}, ${o.points_relais.city}`);
+    } else if (o.delivery_mode === "EXPRESS") {
+      if (o.client_address) lines.push(`📍 Livraison : ${o.client_address}`);
+      if (o.client_latitude) lines.push(`🗺️ https://maps.google.com/?q=${o.client_latitude},${o.client_longitude}`);
+      if (o.calculated_distance_km) lines.push(`📏 Distance : ${o.calculated_distance_km} km`);
+    } else if (o.delivery_mode === "PICKUP") {
+      lines.push("📍 Retrait sur place au restaurant");
+    }
+    if (o.scheduled_date) lines.push(`⏰ Programmée : ${o.scheduled_date} ${o.scheduled_time ?? ""}`);
+    lines.push("");
+    lines.push(`💰 Sous-total : ${formatXof(Number(o.subtotal))}`);
+    lines.push(`🚚 Livraison : ${formatXof(Number(o.delivery_fee))}`);
+    lines.push(`✅ TOTAL : ${formatXof(Number(o.total_amount))}`);
+    lines.push(`💳 Paiement : ${o.payment_method}`);
+    lines.push(`📌 Statut : ${o.status}`);
+    return lines.join("\n");
+  };
+
+  const shareWhatsApp = (o: any) => {
+    const msg = buildOrderMessage(o);
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
+  };
+  const shareSms = (o: any) => {
+    const msg = buildOrderMessage(o);
+    window.open(`sms:?body=${encodeURIComponent(msg)}`, "_blank");
+  };
+  const copyOrder = async (o: any) => {
+    await navigator.clipboard.writeText(buildOrderMessage(o));
+    toast.success("Commande copiée");
+  };
+
   return (
     <div className="space-y-3">
       {orders.length === 0 && <p className="text-center text-muted-foreground py-8">Aucune commande</p>}
@@ -100,6 +150,9 @@ function OrdersLedger() {
             <div>
               <p className="font-semibold">{o.restaurants?.name} <span className="text-xs text-muted-foreground">#{o.id.slice(0, 8)}</span></p>
               <p className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString("fr-FR")}</p>
+              {o.profiles?.full_name && (
+                <p className="text-xs text-muted-foreground">👤 {o.profiles.full_name}{o.profiles.phone && ` · ${o.profiles.phone}`}</p>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="outline">{o.payment_method}</Badge>
@@ -128,7 +181,11 @@ function OrdersLedger() {
 
           <div className="mt-3 pt-3 border-t border-border/40 flex flex-wrap items-center justify-between gap-2">
             <span className="font-display text-lg text-primary-glow font-bold">{formatXof(Number(o.total_amount))}</span>
-            <Select value={o.status} onValueChange={(v) => updateStatus(o.id, v)}>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button size="icon" variant="outline" onClick={() => shareWhatsApp(o)} title="Partager WhatsApp"><MessageCircle className="h-4 w-4" /></Button>
+              <Button size="icon" variant="outline" onClick={() => shareSms(o)} title="Envoyer par SMS"><Share2 className="h-4 w-4" /></Button>
+              <Button size="icon" variant="outline" onClick={() => copyOrder(o)} title="Copier"><Copy className="h-4 w-4" /></Button>
+              <Select value={o.status} onValueChange={(v) => updateStatus(o.id, v)}>
               <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="PENDING">En attente</SelectItem>
@@ -138,6 +195,7 @@ function OrdersLedger() {
                 <SelectItem value="CANCELLED">Annulée</SelectItem>
               </SelectContent>
             </Select>
+            </div>
           </div>
         </Card>
       ))}
@@ -149,6 +207,7 @@ function OrdersLedger() {
 function RestaurantsAdmin() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<any>(null);
   const { data: restaurants = [] } = useQuery({
     queryKey: ["admin-restaurants"],
     queryFn: async () => (await supabase.from("restaurants").select("*").order("created_at", { ascending: false })).data ?? [],
@@ -170,15 +229,9 @@ function RestaurantsAdmin() {
   return (
     <>
       <div className="flex justify-end mb-4">
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-gradient-primary border-0"><Plus className="h-4 w-4 mr-1" />Nouveau stand</Button>
-          </DialogTrigger>
-          <DialogContent className="bg-card max-w-lg max-h-[90vh] overflow-y-auto">
-            <DialogHeader><DialogTitle>Créer un restaurant</DialogTitle></DialogHeader>
-            <RestaurantForm onDone={() => { setOpen(false); qc.invalidateQueries({ queryKey: ["admin-restaurants"] }); }} />
-          </DialogContent>
-        </Dialog>
+        <Button className="bg-gradient-primary border-0" onClick={() => { setEditing(null); setOpen(true); }}>
+          <Plus className="h-4 w-4 mr-1" />Nouveau stand
+        </Button>
       </div>
       <div className="grid gap-3">
         {restaurants.map((r) => (
@@ -193,30 +246,51 @@ function RestaurantsAdmin() {
             <div className="flex gap-1">
               <Button size="icon" variant="outline" onClick={() => share(r, "wa")} title="Partager WhatsApp"><MessageCircle className="h-4 w-4" /></Button>
               <Button size="icon" variant="outline" onClick={() => share(r, "fb")} title="Partager Facebook"><Facebook className="h-4 w-4" /></Button>
+              <Button size="icon" variant="outline" onClick={() => { setEditing(r); setOpen(true); }} title="Modifier"><Pencil className="h-4 w-4" /></Button>
               <Button size="icon" variant="outline" onClick={() => remove(r.id)}><Trash2 className="h-4 w-4" /></Button>
             </div>
           </Card>
         ))}
       </div>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="bg-card max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{editing ? "Modifier" : "Créer"} un restaurant</DialogTitle></DialogHeader>
+          <RestaurantForm initial={editing} onDone={() => { setOpen(false); setEditing(null); qc.invalidateQueries({ queryKey: ["admin-restaurants"] }); }} />
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
 
-function RestaurantForm({ onDone }: { onDone: () => void }) {
-  const [f, setF] = useState({ name: "", city: "Abidjan", neighborhood: "", latitude: "", longitude: "", price_per_km: "300", description: "", logo_url: "", banner_url: "", opening_hours: "" });
+function RestaurantForm({ initial, onDone }: { initial?: any; onDone: () => void }) {
+  const [f, setF] = useState({
+    name: initial?.name ?? "",
+    city: initial?.city ?? "Abidjan",
+    neighborhood: initial?.neighborhood ?? "",
+    latitude: initial?.latitude?.toString() ?? "",
+    longitude: initial?.longitude?.toString() ?? "",
+    price_per_km: initial?.price_per_km?.toString() ?? "300",
+    description: initial?.description ?? "",
+    logo_url: initial?.logo_url ?? "",
+    banner_url: initial?.banner_url ?? "",
+    opening_hours: initial?.opening_hours ?? "",
+  });
   const [saving, setSaving] = useState(false);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    const { error } = await supabase.from("restaurants").insert({
+    const payload = {
       ...f,
       latitude: parseFloat(f.latitude),
       longitude: parseFloat(f.longitude),
       price_per_km: parseFloat(f.price_per_km),
-    });
+    };
+    const { error } = initial
+      ? await supabase.from("restaurants").update(payload).eq("id", initial.id)
+      : await supabase.from("restaurants").insert(payload);
     setSaving(false);
     if (error) return toast.error(error.message);
-    toast.success("Restaurant créé");
+    toast.success(initial ? "Restaurant mis à jour" : "Restaurant créé");
     onDone();
   };
   const usePos = () => {
@@ -245,7 +319,7 @@ function RestaurantForm({ onDone }: { onDone: () => void }) {
       <ImageUploader label="Bannière" aspect="wide" folder="restaurants/banners" value={f.banner_url} onChange={(url) => setF({ ...f, banner_url: url })} />
       <div><Label>Horaires</Label><Input value={f.opening_hours} onChange={(e) => setF({ ...f, opening_hours: e.target.value })} placeholder="10h - 22h" /></div>
       <div><Label>Description</Label><Textarea value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} /></div>
-      <Button type="submit" disabled={saving} className="w-full bg-gradient-primary border-0">{saving ? "..." : "Créer"}</Button>
+      <Button type="submit" disabled={saving} className="w-full bg-gradient-primary border-0">{saving ? "..." : initial ? "Enregistrer" : "Créer"}</Button>
     </form>
   );
 }
@@ -255,6 +329,7 @@ function DishesAdmin() {
   const qc = useQueryClient();
   const [restId, setRestId] = useState<string>("");
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<any>(null);
   const { data: restaurants = [] } = useQuery({
     queryKey: ["admin-restaurants-min"],
     queryFn: async () => (await supabase.from("restaurants").select("id,name")).data ?? [],
@@ -279,13 +354,7 @@ function DishesAdmin() {
           <SelectContent>{restaurants.map((r) => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}</SelectContent>
         </Select>
         {restId && (
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild><Button className="bg-gradient-primary border-0"><Plus className="h-4 w-4 mr-1" />Nouveau plat</Button></DialogTrigger>
-            <DialogContent className="bg-card">
-              <DialogHeader><DialogTitle>Ajouter un plat</DialogTitle></DialogHeader>
-              <DishForm restaurantId={restId} onDone={() => { setOpen(false); qc.invalidateQueries({ queryKey: ["admin-dishes"] }); }} />
-            </DialogContent>
-          </Dialog>
+          <Button className="bg-gradient-primary border-0" onClick={() => { setEditing(null); setOpen(true); }}><Plus className="h-4 w-4 mr-1" />Nouveau plat</Button>
         )}
       </div>
       <div className="grid gap-3">
@@ -295,24 +364,40 @@ function DishesAdmin() {
               {d.image_url ? <img src={d.image_url} className="h-full w-full object-cover" /> : <span>🍽️</span>}
             </div>
             <div className="flex-1"><p className="font-semibold">{d.name}</p><p className="text-xs text-muted-foreground">{d.category} · {formatXof(Number(d.price))}</p></div>
+            <Button size="icon" variant="outline" onClick={() => { setEditing(d); setOpen(true); }} title="Modifier"><Pencil className="h-4 w-4" /></Button>
             <Button size="icon" variant="outline" onClick={() => remove(d.id)}><Trash2 className="h-4 w-4" /></Button>
           </Card>
         ))}
       </div>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="bg-card">
+          <DialogHeader><DialogTitle>{editing ? "Modifier" : "Ajouter"} un plat</DialogTitle></DialogHeader>
+          <DishForm restaurantId={restId} initial={editing} onDone={() => { setOpen(false); setEditing(null); qc.invalidateQueries({ queryKey: ["admin-dishes"] }); }} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
-function DishForm({ restaurantId, onDone }: { restaurantId: string; onDone: () => void }) {
-  const [f, setF] = useState({ name: "", price: "", category: "Plat principal", description: "", image_url: "" });
+function DishForm({ restaurantId, initial, onDone }: { restaurantId: string; initial?: any; onDone: () => void }) {
+  const [f, setF] = useState({
+    name: initial?.name ?? "",
+    price: initial?.price?.toString() ?? "",
+    category: initial?.category ?? "Plat principal",
+    description: initial?.description ?? "",
+    image_url: initial?.image_url ?? "",
+  });
   const [saving, setSaving] = useState(false);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    const { error } = await supabase.from("dishes").insert({ ...f, price: parseFloat(f.price), restaurant_id: restaurantId });
+    const payload = { ...f, price: parseFloat(f.price), restaurant_id: restaurantId };
+    const { error } = initial
+      ? await supabase.from("dishes").update(payload).eq("id", initial.id)
+      : await supabase.from("dishes").insert(payload);
     setSaving(false);
     if (error) return toast.error(error.message);
-    toast.success("Plat ajouté"); onDone();
+    toast.success(initial ? "Plat mis à jour" : "Plat ajouté"); onDone();
   };
   return (
     <form onSubmit={submit} className="space-y-3">
@@ -323,7 +408,7 @@ function DishForm({ restaurantId, onDone }: { restaurantId: string; onDone: () =
       </div>
       <ImageUploader label="Photo du plat" folder="dishes" value={f.image_url} onChange={(url) => setF({ ...f, image_url: url })} />
       <div><Label>Description</Label><Textarea value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} /></div>
-      <Button type="submit" disabled={saving} className="w-full bg-gradient-primary border-0">{saving ? "..." : "Ajouter"}</Button>
+      <Button type="submit" disabled={saving} className="w-full bg-gradient-primary border-0">{saving ? "..." : initial ? "Enregistrer" : "Ajouter"}</Button>
     </form>
   );
 }
@@ -332,51 +417,19 @@ function DishForm({ restaurantId, onDone }: { restaurantId: string; onDone: () =
 function RelaisAdmin() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [f, setF] = useState({ city: "Abidjan", neighborhood: "", address_name: "", additional_details: "", opening_hours: "", latitude: "", longitude: "" });
+  const [editing, setEditing] = useState<any>(null);
   const { data: relais = [] } = useQuery({
     queryKey: ["admin-relais"],
     queryFn: async () => (await supabase.from("points_relais").select("*").order("city")).data ?? [],
   });
-  const create = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const payload: any = { ...f };
-    payload.latitude = f.latitude ? Number(f.latitude) : null;
-    payload.longitude = f.longitude ? Number(f.longitude) : null;
-    const { error } = await supabase.from("points_relais").insert(payload);
-    if (error) return toast.error(error.message);
-    toast.success("Point relais ajouté");
-    setOpen(false);
-    setF({ city: "Abidjan", neighborhood: "", address_name: "", additional_details: "", opening_hours: "", latitude: "", longitude: "" });
-    qc.invalidateQueries({ queryKey: ["admin-relais"] });
-  };
   const remove = async (id: string) => { await supabase.from("points_relais").delete().eq("id", id); qc.invalidateQueries({ queryKey: ["admin-relais"] }); };
 
   return (
     <>
       <div className="flex justify-end mb-4">
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild><Button className="bg-gradient-primary border-0"><Plus className="h-4 w-4 mr-1" />Nouveau point relais</Button></DialogTrigger>
-          <DialogContent className="bg-card">
-            <DialogHeader><DialogTitle>Créer un point relais</DialogTitle></DialogHeader>
-            <form onSubmit={create} className="space-y-3">
-              <div><Label>Ville</Label>
-                <Select value={f.city} onValueChange={(v) => setF({ ...f, city: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{IVORIAN_CITIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div><Label>Quartier</Label><Input required value={f.neighborhood} onChange={(e) => setF({ ...f, neighborhood: e.target.value })} /></div>
-              <div><Label>Adresse</Label><Input required value={f.address_name} onChange={(e) => setF({ ...f, address_name: e.target.value })} /></div>
-              <div><Label>Détails</Label><Textarea value={f.additional_details} onChange={(e) => setF({ ...f, additional_details: e.target.value })} /></div>
-              <div><Label>Horaires</Label><Input value={f.opening_hours} onChange={(e) => setF({ ...f, opening_hours: e.target.value })} placeholder="8h - 20h" /></div>
-              <div className="grid grid-cols-2 gap-2">
-                <div><Label>Latitude</Label><Input type="number" step="0.000001" required value={f.latitude} onChange={(e) => setF({ ...f, latitude: e.target.value })} placeholder="5.3364" /></div>
-                <div><Label>Longitude</Label><Input type="number" step="0.000001" required value={f.longitude} onChange={(e) => setF({ ...f, longitude: e.target.value })} placeholder="-4.0267" /></div>
-              </div>
-              <Button type="submit" className="w-full bg-gradient-primary border-0">Créer</Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <Button className="bg-gradient-primary border-0" onClick={() => { setEditing(null); setOpen(true); }}>
+          <Plus className="h-4 w-4 mr-1" />Nouveau point relais
+        </Button>
       </div>
       <div className="grid gap-3">
         {relais.map((r) => (
@@ -391,11 +444,64 @@ function RelaisAdmin() {
                 <p className="text-xs text-destructive">⚠ GPS manquant — retrait indisponible</p>
               )}
             </div>
+            <Button size="icon" variant="outline" onClick={() => { setEditing(r); setOpen(true); }} title="Modifier"><Pencil className="h-4 w-4" /></Button>
             <Button size="icon" variant="outline" onClick={() => remove(r.id)}><Trash2 className="h-4 w-4" /></Button>
           </Card>
         ))}
       </div>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="bg-card">
+          <DialogHeader><DialogTitle>{editing ? "Modifier" : "Créer"} un point relais</DialogTitle></DialogHeader>
+          <RelaisForm initial={editing} onDone={() => { setOpen(false); setEditing(null); qc.invalidateQueries({ queryKey: ["admin-relais"] }); }} />
+        </DialogContent>
+      </Dialog>
     </>
+  );
+}
+
+function RelaisForm({ initial, onDone }: { initial?: any; onDone: () => void }) {
+  const [f, setF] = useState({
+    city: initial?.city ?? "Abidjan",
+    neighborhood: initial?.neighborhood ?? "",
+    address_name: initial?.address_name ?? "",
+    additional_details: initial?.additional_details ?? "",
+    opening_hours: initial?.opening_hours ?? "",
+    latitude: initial?.latitude?.toString() ?? "",
+    longitude: initial?.longitude?.toString() ?? "",
+  });
+  const [saving, setSaving] = useState(false);
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    const payload: any = { ...f };
+    payload.latitude = f.latitude ? Number(f.latitude) : null;
+    payload.longitude = f.longitude ? Number(f.longitude) : null;
+    const { error } = initial
+      ? await supabase.from("points_relais").update(payload).eq("id", initial.id)
+      : await supabase.from("points_relais").insert(payload);
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success(initial ? "Point relais mis à jour" : "Point relais ajouté");
+    onDone();
+  };
+  return (
+    <form onSubmit={submit} className="space-y-3">
+      <div><Label>Ville</Label>
+        <Select value={f.city} onValueChange={(v) => setF({ ...f, city: v })}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>{IVORIAN_CITIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+      <div><Label>Quartier</Label><Input required value={f.neighborhood} onChange={(e) => setF({ ...f, neighborhood: e.target.value })} /></div>
+      <div><Label>Adresse</Label><Input required value={f.address_name} onChange={(e) => setF({ ...f, address_name: e.target.value })} /></div>
+      <div><Label>Détails</Label><Textarea value={f.additional_details} onChange={(e) => setF({ ...f, additional_details: e.target.value })} /></div>
+      <div><Label>Horaires</Label><Input value={f.opening_hours} onChange={(e) => setF({ ...f, opening_hours: e.target.value })} placeholder="8h - 20h" /></div>
+      <div className="grid grid-cols-2 gap-2">
+        <div><Label>Latitude</Label><Input type="number" step="0.000001" required value={f.latitude} onChange={(e) => setF({ ...f, latitude: e.target.value })} placeholder="5.3364" /></div>
+        <div><Label>Longitude</Label><Input type="number" step="0.000001" required value={f.longitude} onChange={(e) => setF({ ...f, longitude: e.target.value })} placeholder="-4.0267" /></div>
+      </div>
+      <Button type="submit" disabled={saving} className="w-full bg-gradient-primary border-0">{saving ? "..." : initial ? "Enregistrer" : "Créer"}</Button>
+    </form>
   );
 }
 

@@ -17,6 +17,7 @@ import { Route as RestaurantsIndexRouteImport } from './routes/restaurants.index
 import { Route as RestaurantsIdRouteImport } from './routes/restaurants.$id'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
 import { Route as AuthenticatedSetupRouteImport } from './routes/_authenticated/setup'
+import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedOrdersRouteImport } from './routes/_authenticated/orders'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCheckoutRouteImport } from './routes/_authenticated/checkout'
@@ -61,6 +62,11 @@ const AuthenticatedSetupRoute = AuthenticatedSetupRouteImport.update({
   path: '/setup',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedOrdersRoute = AuthenticatedOrdersRouteImport.update({
   id: '/orders',
   path: '/orders',
@@ -90,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/checkout': typeof AuthenticatedCheckoutRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/orders': typeof AuthenticatedOrdersRoute
+  '/profile': typeof AuthenticatedProfileRoute
   '/setup': typeof AuthenticatedSetupRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/restaurants/$id': typeof RestaurantsIdRoute
@@ -103,6 +110,7 @@ export interface FileRoutesByTo {
   '/checkout': typeof AuthenticatedCheckoutRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/orders': typeof AuthenticatedOrdersRoute
+  '/profile': typeof AuthenticatedProfileRoute
   '/setup': typeof AuthenticatedSetupRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/restaurants/$id': typeof RestaurantsIdRoute
@@ -118,6 +126,7 @@ export interface FileRoutesById {
   '/_authenticated/checkout': typeof AuthenticatedCheckoutRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/orders': typeof AuthenticatedOrdersRoute
+  '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/setup': typeof AuthenticatedSetupRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/restaurants/$id': typeof RestaurantsIdRoute
@@ -133,6 +142,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/dashboard'
     | '/orders'
+    | '/profile'
     | '/setup'
     | '/wallet'
     | '/restaurants/$id'
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/dashboard'
     | '/orders'
+    | '/profile'
     | '/setup'
     | '/wallet'
     | '/restaurants/$id'
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
     | '/_authenticated/checkout'
     | '/_authenticated/dashboard'
     | '/_authenticated/orders'
+    | '/_authenticated/profile'
     | '/_authenticated/setup'
     | '/_authenticated/wallet'
     | '/restaurants/$id'
@@ -233,6 +245,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSetupRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/profile': {
+      id: '/_authenticated/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/orders': {
       id: '/_authenticated/orders'
       path: '/orders'
@@ -269,6 +288,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCheckoutRoute: typeof AuthenticatedCheckoutRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedOrdersRoute: typeof AuthenticatedOrdersRoute
+  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedSetupRoute: typeof AuthenticatedSetupRoute
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
 }
@@ -278,6 +298,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCheckoutRoute: AuthenticatedCheckoutRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedOrdersRoute: AuthenticatedOrdersRoute,
+  AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedSetupRoute: AuthenticatedSetupRoute,
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
 }
