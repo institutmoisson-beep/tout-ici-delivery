@@ -184,7 +184,7 @@ function AdminDashboard() {
 }
 
 // ============ ORDERS LEDGER ============
-function OrdersLedger() {
+export function OrdersLedger() {
   const qc = useQueryClient();
   const [period, setPeriod] = useState<Period>("ALL");
   const [search, setSearch] = useState("");
@@ -347,7 +347,7 @@ function OrdersLedger() {
 }
 
 // ============ RESTAURANTS ============
-function RestaurantsAdmin() {
+export function RestaurantsAdmin() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
@@ -468,7 +468,7 @@ function RestaurantForm({ initial, onDone }: { initial?: any; onDone: () => void
 }
 
 // ============ DISHES ============
-function DishesAdmin() {
+export function DishesAdmin() {
   const qc = useQueryClient();
   const [restId, setRestId] = useState<string>("");
   const [open, setOpen] = useState(false);
@@ -557,7 +557,7 @@ function DishForm({ restaurantId, initial, onDone }: { restaurantId: string; ini
 }
 
 // ============ POINTS RELAIS ============
-function RelaisAdmin() {
+export function RelaisAdmin() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
@@ -649,7 +649,7 @@ function RelaisForm({ initial, onDone }: { initial?: any; onDone: () => void }) 
 }
 
 // ============ DELIVERY PRICING ============
-function DeliveryAdmin() {
+export function DeliveryAdmin() {
   const qc = useQueryClient();
   const { data: pricing } = useQuery({
     queryKey: ["admin-delivery-pricing"],
@@ -750,7 +750,7 @@ function DeliveryAdmin() {
 // ============ RECHARGES ============
 const rechargeStatusLabel: Record<string, string> = { ALL: "Tout", PENDING: "En attente", APPROVED: "Approuvée", REJECTED: "Rejetée" };
 
-function RechargesAdmin() {
+export function RechargesAdmin() {
   const qc = useQueryClient();
   const [status, setStatus] = useState<string>("ALL");
   const [period, setPeriod] = useState<Period>("ALL");
@@ -818,7 +818,7 @@ function RechargesAdmin() {
   );
 }
 // ============ MSN GATEWAYS CONFIG ============
-function GatewaysAdmin() {
+export function GatewaysAdmin() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
@@ -932,7 +932,7 @@ function GatewayForm({ initial, onDone }: { initial: any; onDone: () => void }) 
 }
 
 // ============ FINANCE LEDGER ============
-function FinanceLedger() {
+export function FinanceLedger() {
   const qc = useQueryClient();
   const [filter, setFilter] = useState<string>("ALL");
   const { data: rows = [] } = useQuery({
