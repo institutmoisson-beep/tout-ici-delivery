@@ -4,7 +4,7 @@ import { useState } from "react";
 import {
   ShieldCheck, ShoppingBag, Wallet as WalletIcon, MapPin, Clock, ChefHat,
   Truck, CheckCircle2, XCircle, ArrowUpRight, ArrowDownLeft, LocateFixed,
-  UtensilsCrossed,
+  UtensilsCrossed, Store, Package, Zap, Users,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,7 +28,7 @@ const statusMeta: Record<string, { label: string; icon: any; color: string }> = 
 };
 
 function DashboardPage() {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, domains } = useAuth();
   const qc = useQueryClient();
   const [locating, setLocating] = useState(false);
 
@@ -137,6 +137,8 @@ function DashboardPage() {
           )}
         </div>
       </div>
+
+      {(isAdmin || domains.length > 0) && <ManagementSpaces isAdmin={isAdmin} domains={domains} />}
 
       {/* Recap grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
