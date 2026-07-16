@@ -7,6 +7,7 @@ interface AuthCtx {
   session: Session | null;
   loading: boolean;
   isAdmin: boolean;
+  domains: string[];
   signOut: () => Promise<void>;
 }
 
@@ -15,6 +16,7 @@ const AuthContext = createContext<AuthCtx>({
   session: null,
   loading: true,
   isAdmin: false,
+  domains: [],
   signOut: async () => {},
 });
 
@@ -22,6 +24,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [domains, setDomains] = useState<string[]>([]);
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
@@ -33,9 +36,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .select("role")
             .eq("user_id", s.user.id);
           setIsAdmin(!!data?.some((r) => r.role === "admin"));
+          const { data: mr } = await supabase
+            .from("manager_roles")
+            .select("domain")
+            .eq("user_id", s.user.id);
+          setDomains((mr ?? []).map((r: any) => r.domain));
         }, 0);
       } else {
         setIsAdmin(false);
+        setDomains([]);
       }
     });
 
@@ -50,6 +59,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .then(({ data: roles }) => {
             setIsAdmin(!!roles?.some((r) => r.role === "admin"));
           });
+        supabase
+          .from("manager_roles")
+          .select("domain")
+          .eq("user_id", data.session.user.id)
+          .then(({ data: mr }) => {
+            setDomains((mr ?? []).map((r: any) => r.domain));
+          });
       }
     });
 
@@ -63,6 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         loading,
         isAdmin,
+        domains,
         signOut: async () => {
           await supabase.auth.signOut();
         },
