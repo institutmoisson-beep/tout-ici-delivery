@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, type ReactElement } from "react";
 import { z } from "zod";
 import { ShieldCheck, Store, UtensilsCrossed, MapPin, Package, Wallet, Zap, Users, Truck } from "lucide-react";
 import { toast } from "sonner";
@@ -24,7 +24,7 @@ export const Route = createFileRoute("/_authenticated/manage")({
   component: ManagePage,
 });
 
-type TabDef = { value: string; label: string; icon: any; domain: string; render: () => JSX.Element };
+type TabDef = { value: string; label: string; icon: any; domain: string; render: () => ReactElement };
 
 const TABS: TabDef[] = [
   { value: "restaurants", label: "Restaurants", icon: Store, domain: "restaurants", render: () => <RestaurantsAdmin /> },
