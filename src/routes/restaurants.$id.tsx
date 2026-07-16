@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatXof } from "@/lib/distance";
 import { useCart } from "@/hooks/use-cart";
 import { useAuth } from "@/hooks/use-auth";
+import { ShareMenu } from "@/components/share-menu";
 
 const INSTRUCTIONS = [
   "Plus de piment",
@@ -124,7 +125,7 @@ function RestaurantDetail() {
               </h2>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {list.map((d) => (
-                  <DishCard key={d.id} dish={d} restaurantId={restaurant.id} onNeedAuth={() => navigate({ to: "/auth" })} authed={!!user} />
+                  <DishCard key={d.id} dish={d} restaurant={restaurant} onNeedAuth={() => navigate({ to: "/auth" })} authed={!!user} />
                 ))}
               </div>
             </div>
@@ -135,12 +136,17 @@ function RestaurantDetail() {
   );
 }
 
-function DishCard({ dish, restaurantId, onNeedAuth, authed }: { dish: any; restaurantId: string; onNeedAuth: () => void; authed: boolean }) {
+function DishCard({ dish, restaurant, onNeedAuth, authed }: { dish: any; restaurant: any; onNeedAuth: () => void; authed: boolean }) {
   const { addItem } = useCart();
   const [open, setOpen] = useState(false);
   const [qty, setQty] = useState(1);
   const [selected, setSelected] = useState<string[]>([]);
   const [note, setNote] = useState("");
+  const restaurantId = restaurant.id;
+  const shareUrl = typeof window !== "undefined"
+    ? `${window.location.origin}/restaurants/${restaurantId}#dish-${dish.id}`
+    : `/restaurants/${restaurantId}#dish-${dish.id}`;
+  const shareText = `🍽️ ${dish.name} — ${formatXof(Number(dish.price))}\n${dish.description ? dish.description + "\n" : ""}Chez ${restaurant.name} (${restaurant.neighborhood ?? restaurant.city}) sur Tout'ICI`;
 
   const toggle = (v: string) => setSelected((s) => (s.includes(v) ? s.filter((x) => x !== v) : [...s, v]));
 
@@ -166,7 +172,10 @@ function DishCard({ dish, restaurantId, onNeedAuth, authed }: { dish: any; resta
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <Card className="overflow-hidden bg-gradient-card border-border/40 shadow-card hover:shadow-glow transition-all cursor-pointer group">
+        <Card id={`dish-${dish.id}`} className="overflow-hidden bg-gradient-card border-border/40 shadow-card hover:shadow-glow transition-all cursor-pointer group relative">
+          <div className="absolute top-2 right-2 z-10 bg-background/70 backdrop-blur rounded-full">
+            <ShareMenu url={shareUrl} text={shareText} title={dish.name} imageUrl={dish.image_url} stopPropagation />
+          </div>
           <div className="aspect-[4/3] bg-secondary/40 overflow-hidden">
             {dish.image_url ? (
               <img src={dish.image_url} alt={dish.name} className="h-full w-full object-cover group-hover:scale-105 transition-transform" />
