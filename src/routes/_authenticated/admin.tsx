@@ -2,7 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Store, UtensilsCrossed, MapPin, Package, Wallet, ShieldCheck, Plus, Trash2, CheckCircle2, XCircle, Facebook, MessageCircle, Zap, Copy, PlayCircle, Truck, Pencil, Share2 } from "lucide-react";
+import { Store, UtensilsCrossed, MapPin, Package, Wallet, ShieldCheck, Plus, Trash2, CheckCircle2, XCircle, Facebook, MessageCircle, Zap, Copy, PlayCircle, Truck, Pencil, Share2, Users } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -69,7 +70,7 @@ function AdminPage() {
       </div>
 
       <Tabs defaultValue="dashboard">
-        <TabsList className="grid grid-cols-2 md:grid-cols-9 w-full">
+        <TabsList className="grid grid-cols-2 md:grid-cols-10 w-full">
           <TabsTrigger value="dashboard"><ShieldCheck className="h-4 w-4 mr-1" />Tableau de bord</TabsTrigger>
           <TabsTrigger value="orders"><Package className="h-4 w-4 mr-1" />Commandes</TabsTrigger>
           <TabsTrigger value="restaurants"><Store className="h-4 w-4 mr-1" />Restaurants</TabsTrigger>
@@ -79,6 +80,7 @@ function AdminPage() {
           <TabsTrigger value="recharges"><Wallet className="h-4 w-4 mr-1" />Recharges</TabsTrigger>
           <TabsTrigger value="gateways"><Zap className="h-4 w-4 mr-1" />Passerelles</TabsTrigger>
           <TabsTrigger value="finance"><ShieldCheck className="h-4 w-4 mr-1" />MSN Ledger</TabsTrigger>
+          <TabsTrigger value="roles"><Users className="h-4 w-4 mr-1" />Rôles</TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard" className="mt-6"><AdminDashboard /></TabsContent>
@@ -90,8 +92,107 @@ function AdminPage() {
         <TabsContent value="recharges" className="mt-6"><RechargesAdmin /></TabsContent>
         <TabsContent value="gateways" className="mt-6"><GatewaysAdmin /></TabsContent>
         <TabsContent value="finance" className="mt-6"><FinanceLedger /></TabsContent>
+        <TabsContent value="roles" className="mt-6"><RolesAdmin /></TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+// ============ ROLES ADMIN ============
+const ALL_DOMAINS: { key: string; label: string }[] = [
+  { key: "restaurants", label: "Restaurants & Plats" },
+  { key: "relais", label: "Points relais" },
+  { key: "orders", label: "Commandes" },
+  { key: "finance", label: "Finance (recharges, tarifs, ledger)" },
+  { key: "payments", label: "Passerelles de paiement" },
+  { key: "holidays", label: "Jours fériés" },
+  { key: "profiles", label: "Profils utilisateurs" },
+];
+
+function RolesAdmin() {
+  const qc = useQueryClient();
+  const [q, setQ] = useState("");
+  const { data: users = [], isLoading } = useQuery({
+    queryKey: ["admin-users-roles"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("admin_list_users");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const filtered = users.filter((u: any) => {
+    const s = q.trim().toLowerCase();
+    if (!s) return true;
+    return (u.full_name ?? "").toLowerCase().includes(s) || (u.email ?? "").toLowerCase().includes(s);
+  });
+
+  const save = async (userId: string, domains: string[]) => {
+    const { error } = await supabase.rpc("admin_set_manager_roles", {
+      p_user_id: userId,
+      p_domains: domains,
+    });
+    if (error) return toast.error(error.message);
+    toast.success("Rôles mis à jour");
+    qc.invalidateQueries({ queryKey: ["admin-users-roles"] });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <p className="text-sm text-muted-foreground mb-2">
+          Attribuez à chaque utilisateur un ou plusieurs domaines de gestion. L'utilisateur verra apparaître un bouton dédié dans son tableau de bord pour piloter chaque espace attribué.
+        </p>
+        <Input placeholder="Rechercher par nom ou email…" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-sm" />
+      </div>
+      {isLoading && <p className="text-sm text-muted-foreground">Chargement…</p>}
+      <div className="grid gap-3">
+        {filtered.map((u: any) => (
+          <UserRolesRow key={u.id} user={u} onSave={save} />
+        ))}
+        {!isLoading && filtered.length === 0 && <p className="text-sm text-muted-foreground">Aucun utilisateur.</p>}
+      </div>
+    </div>
+  );
+}
+
+function UserRolesRow({ user, onSave }: { user: any; onSave: (id: string, d: string[]) => Promise<void> }) {
+  const [selected, setSelected] = useState<string[]>(user.domains ?? []);
+  const [saving, setSaving] = useState(false);
+  const dirty = selected.slice().sort().join(",") !== (user.domains ?? []).slice().sort().join(",");
+
+  const toggle = (d: string) =>
+    setSelected((s) => (s.includes(d) ? s.filter((x) => x !== d) : [...s, d]));
+
+  const save = async () => {
+    setSaving(true);
+    await onSave(user.id, selected);
+    setSaving(false);
+  };
+
+  return (
+    <Card className="p-4 bg-gradient-card border-border/40">
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+        <div>
+          <p className="font-semibold">
+            {user.full_name || "Sans nom"}
+            {user.is_admin && <Badge className="ml-2 bg-gold/20 text-gold border-gold/40">Super-admin</Badge>}
+          </p>
+          <p className="text-xs text-muted-foreground">{user.email}</p>
+        </div>
+        <Button size="sm" onClick={save} disabled={!dirty || saving} className="bg-gradient-primary border-0">
+          {saving ? "Enregistrement…" : "Enregistrer"}
+        </Button>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+        {ALL_DOMAINS.map((d) => (
+          <label key={d.key} className="flex items-center gap-2 text-sm cursor-pointer rounded-lg border border-border/50 p-2 hover:border-primary/50 transition-colors">
+            <Checkbox checked={selected.includes(d.key)} onCheckedChange={() => toggle(d.key)} />
+            {d.label}
+          </label>
+        ))}
+      </div>
+    </Card>
   );
 }
 
