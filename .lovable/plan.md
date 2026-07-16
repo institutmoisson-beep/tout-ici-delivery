@@ -1,66 +1,79 @@
-## Tout'ICI — Plan de construction
+## 1. Bouton partage sur chaque plat
 
-Marketplace de livraison de restaurants ivoiriens avec moteur de distance GPS, wallet interne, et centre admin.
+Sur `src/routes/restaurants.$id.tsx` (DishCard), ajouter un bouton "Partager" (icône) visible sur chaque carte de plat pour tout visiteur, même non connecté. Il ouvre un petit menu avec :
 
-### Étape 1 — Backend (Lovable Cloud + PostGIS)
-Activer Lovable Cloud, puis créer les tables :
-- `profiles` (user_id, full_name, phone, cgu_accepted_at)
-- `user_roles` + enum `app_role` ('admin','user') + fonction `has_role`
-- `restaurants` (nom, ville, quartier, lat, lng, price_per_km, logo, banner, description, hours)
-- `dishes` (restaurant_id, nom, prix, image, description, catégorie)
-- `points_relais` (ville, quartier, adresse, détails, horaires)
-- `orders` (mode livraison, point_relais_id, cooking_instructions jsonb, scheduled_date/time, client lat/lng, distance_km, delivery_fee, total, payment_method, status, rating, review)
-- `wallets` (user_id, balance)
-- `wallet_transactions` (type: recharge/debit/credit, montant, statut, preuve)
-- `recharge_requests` (montant, méthode, preuve, statut)
-- Extension PostGIS + fonction SQL `calculate_distance_km(lat1,lng1,lat2,lng2)`
-- RLS partout, GRANTs, policies par rôle
+- **WhatsApp** — `https://wa.me/?text=…`
+- **Facebook** — `https://www.facebook.com/sharer/sharer.php?u=…`
+- **X (Twitter)** — `https://twitter.com/intent/tweet?…`
+- **Copier le lien**
+- **Partager…** (Web Share API natif si `navigator.share` est disponible — permet Instagram/TikTok/Snapchat sur mobile) — inclut aussi le fichier image du plat quand `navigator.canShare({ files })` est supporté.
 
-### Étape 2 — Design system violet/rosé kaki/noir
-`src/styles.css` en oklch : violet profond primaire, rosé kaki accent, noir léger surfaces, tokens gradients + shadows premium. Fonts distinctes (display + body via Google Fonts en `<link>`).
+Le texte partagé inclut : nom du plat, prix formaté, description courte, nom + quartier du restaurant, et l'URL profonde `/restaurants/:id#dish-:dishId`. La carte reçoit `id="dish-<id>"` pour l'ancrage.
 
-### Étape 3 — Routes publiques
-- `/` — landing (hero, restaurants populaires, comment ça marche)
-- `/restaurants` — recherche + filtres ville/quartier
-- `/restaurants/$id` — vitrine + menu grouped par catégorie + drawer plat
-- `/auth` — login/signup
-- `/cgu` — page CGU complète
+Aucune modification côté admin : le bouton s'affiche automatiquement dès qu'un plat existe.
 
-### Étape 4 — Parcours commande (`_authenticated`)
-- Panier + drawer plat avec consignes spéciales (checklist + texte libre)
-- Checkout : mode livraison (Express GPS / Point Relais), calendar+time picker, capture GPS navigator.geolocation, calcul distance via RPC PostGIS, affichage frais dynamique, warning interurbain
-- **Règle >15km : désactiver Paiement à la livraison**
-- **Checkbox CGU obligatoire** (persistée sur profile)
-- Modes paiement : Wallet / SmartPay / Cash (selon distance)
-- `/orders` — historique + notation post-livraison
-- `/wallet` — solde + formulaire de recharge
+## 2. Système multi-rôles
 
-### Étape 5 — Admin (`_authenticated/admin`, gated par has_role)
-- Gestion restaurants (form + pin carte simple lat/lng)
-- Gestion plats
-- Gestion Points Relais
-- Ledger commandes temps réel (statut, distance, GPS, instructions)
-- Validation recharges wallet (approuver/rejeter)
-- Kit partage social (génération texte+lien Facebook/WhatsApp)
+### Schéma (migration)
 
-### Étape 6 — Distance & IA
-- Fonction SQL PostGIS pour distance haversine précise
-- Server function classifiant "Inter-City" si distance>50km ou villes différentes
-- Message d'avertissement UI
+Étendre l'enum `app_role` avec les valeurs :
 
-### Détails techniques
-- Server functions (`createServerFn`) pour : calcul distance, création commande, débit wallet, admin approve recharge
-- Realtime Supabase pour ledger admin
-- Cartes : affichage simple avec coordonnées (pas de Mapbox pour éviter clé externe) — lien vers Google Maps
-- Mobile-first, layouts compacts
+- `restaurant_manager` — gère `restaurants` + `dishes`
+- `relais_manager` — gère `points_relais`
+- `orders_manager` — gère `orders` (statuts, partage WhatsApp/SMS)
+- `finance_manager` — gère `wallets`, `wallet_transactions`, `financial_transactions`, `recharge_requests`, `delivery_pricing`
+- `payments_manager` — gère `payment_gateways`
+- `holidays_manager` — gère `public_holidays`
+- `profiles_manager` — consulte `profiles` + `user_roles` (lecture seule sur user_roles, sauf super-admin)
 
-### Livrables ordonnés
-1. Enable Cloud + migrations schéma
-2. Design system + layout racine + auth
-3. Landing + browse + fiche restaurant
-4. Checkout complet avec GPS + CGU + distance
-5. Wallet + recharges
-6. Admin center complet
-7. Notation + partage social
+Politiques RLS mises à jour sur chaque table concernée : en plus de `has_role(auth.uid(), 'admin')`, autoriser le rôle-métier correspondant via `has_role(auth.uid(), '<role>')` en SELECT/INSERT/UPDATE/DELETE. `admin` reste super-admin (peut tout, y compris attribuer les rôles). Seul `admin` peut écrire dans `user_roles`.
 
-Prêt à lancer ?
+Les rôles sont cumulables : un utilisateur peut avoir `restaurant_manager` + `orders_manager` par exemple.
+
+### Attribution (super-admin)
+
+Dans `src/routes/_authenticated/admin.tsx`, nouvelle section **Rôles & équipe** :
+
+- Liste des utilisateurs (via `profiles`) avec leurs rôles actuels sous forme de badges.
+- Recherche par email/nom.
+- Pour chaque utilisateur : cases à cocher pour chaque rôle (cumul possible). Sauvegarde via RPC `admin_set_user_roles(user_id, roles[])` (SECURITY DEFINER, vérifie `has_role(auth.uid(),'admin')`, remplace l'ensemble des rôles de l'utilisateur).
+
+### Dashboard utilisateur
+
+Sur `src/routes/_authenticated/dashboard.tsx`, ajouter en haut une section **Mes espaces de gestion** qui n'apparaît que si l'utilisateur possède au moins un rôle non-`user`. Un bouton/carte par rôle attribué :
+
+- 🍽️ Espace Restaurants → `/manage/restaurants`
+- 📍 Espace Points relais → `/manage/relais`
+- 📦 Espace Commandes → `/manage/orders`
+- 💰 Espace Finance → `/manage/finance`
+- 💳 Espace Passerelles → `/manage/payments`
+- 📅 Espace Jours fériés → `/manage/holidays`
+- 👥 Espace Profils → `/manage/profiles`
+
+### Pages de gestion par rôle
+
+Créer sous `src/routes/_authenticated/manage.*.tsx` une route par rôle. Chaque page :
+
+1. Vérifie côté client que l'utilisateur possède le rôle (ou est admin), sinon redirige vers `/dashboard` avec un toast.
+2. Réutilise directement les composants/sections existants de `admin.tsx` (extraits en composants partagés dans `src/components/admin-sections/`) pour ne pas dupliquer le code.
+3. Affiche un en-tête « Tableau de bord — <Rôle> » avec les mêmes outils CRUD que le super-admin, limités à son domaine.
+
+Le super-admin conserve `/admin` avec tout, ces routes sont des vues focalisées pour les managers.
+
+## Fichiers touchés
+
+- **Nouveau** : `supabase/migrations/<ts>_role_system.sql` (enum, RLS, RPC `admin_set_user_roles`)
+- **Nouveau** : `src/components/share-menu.tsx` (menu de partage réutilisable)
+- **Nouveau** : `src/components/admin-sections/{restaurants,dishes,relais,orders,finance,payments,holidays,profiles,roles}.tsx` (extractions depuis admin.tsx)
+- **Nouveau** : `src/routes/_authenticated/manage.{restaurants,relais,orders,finance,payments,holidays,profiles}.tsx`
+- **Modifié** : `src/routes/restaurants.$id.tsx` (bouton partager sur DishCard)
+- **Modifié** : `src/routes/_authenticated/admin.tsx` (import des sections extraites + nouvelle section Rôles)
+- **Modifié** : `src/routes/_authenticated/dashboard.tsx` (grille « Mes espaces de gestion »)
+- **Modifié** : `src/hooks/use-auth.tsx` (exposer `roles: string[]` en plus de `isAdmin`)
+
+## Notes techniques
+
+- Cumul des rôles : `user_roles` a déjà `UNIQUE(user_id, role)`, aucun changement de structure.
+- `admin_set_user_roles` fait un `DELETE` puis `INSERT` en transaction, en refusant de retirer le dernier `admin` du système (garde-fou).
+- L'enum PostgreSQL nécessite `ALTER TYPE ... ADD VALUE` hors transaction ; la migration utilise plusieurs statements séparés.
+- Les RLS existantes basées sur `has_role(auth.uid(),'admin')` restent en place ; on ajoute des policies additionnelles `OR has_role(auth.uid(),'<role_manager>')` via de nouvelles policies séparées (RLS = OR entre policies permissives).

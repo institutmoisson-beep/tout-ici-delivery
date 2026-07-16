@@ -184,6 +184,27 @@ export type Database = {
           },
         ]
       }
+      manager_roles: {
+        Row: {
+          created_at: string
+          domain: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          domain: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          domain?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           calculated_distance_km: number | null
@@ -615,12 +636,31 @@ export type Database = {
         Args: { p_approve: boolean; p_recharge_id: string }
         Returns: undefined
       }
+      admin_list_users: {
+        Args: never
+        Returns: {
+          domains: string[]
+          email: string
+          full_name: string
+          id: string
+          is_admin: boolean
+          phone: string
+        }[]
+      }
+      admin_set_manager_roles: {
+        Args: { p_domains: string[]; p_user_id: string }
+        Returns: undefined
+      }
       calculate_distance_km: {
         Args: { lat1: number; lat2: number; lng1: number; lng2: number }
         Returns: number
       }
       claim_first_admin: { Args: never; Returns: boolean }
       ensure_wallet: { Args: { _uid: string }; Returns: number }
+      has_manager: {
+        Args: { _domain: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -4,7 +4,7 @@ import { useState } from "react";
 import {
   ShieldCheck, ShoppingBag, Wallet as WalletIcon, MapPin, Clock, ChefHat,
   Truck, CheckCircle2, XCircle, ArrowUpRight, ArrowDownLeft, LocateFixed,
-  UtensilsCrossed,
+  UtensilsCrossed, Store, Package, Zap, Users,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,7 +28,7 @@ const statusMeta: Record<string, { label: string; icon: any; color: string }> = 
 };
 
 function DashboardPage() {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, domains } = useAuth();
   const qc = useQueryClient();
   const [locating, setLocating] = useState(false);
 
@@ -137,6 +137,8 @@ function DashboardPage() {
           )}
         </div>
       </div>
+
+      {(isAdmin || domains.length > 0) && <ManagementSpaces isAdmin={isAdmin} domains={domains} />}
 
       {/* Recap grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
@@ -253,5 +255,46 @@ function StatCard({ icon: Icon, label, value, accent }: { icon: any; label: stri
       </div>
       <p className="font-display text-xl font-bold">{value}</p>
     </Card>
+  );
+}
+
+const DOMAIN_META: Record<string, { label: string; icon: any; tab: string }> = {
+  restaurants: { label: "Espace Restaurants & Plats", icon: Store, tab: "restaurants" },
+  relais: { label: "Espace Points relais", icon: MapPin, tab: "relais" },
+  orders: { label: "Espace Commandes", icon: Package, tab: "orders" },
+  finance: { label: "Espace Finance", icon: WalletIcon, tab: "finance" },
+  payments: { label: "Espace Passerelles de paiement", icon: Zap, tab: "gateways" },
+  profiles: { label: "Espace Profils", icon: Users, tab: "profiles" },
+};
+
+function ManagementSpaces({ isAdmin, domains }: { isAdmin: boolean; domains: string[] }) {
+  const shown = isAdmin ? Object.keys(DOMAIN_META) : domains.filter((d) => d in DOMAIN_META);
+  if (shown.length === 0) return null;
+  return (
+    <section className="mb-6">
+      <div className="flex items-center gap-2 mb-3">
+        <ShieldCheck className="h-4 w-4 text-primary-glow" />
+        <h2 className="font-display text-lg font-semibold">Mes espaces de gestion</h2>
+        <span className="text-xs text-muted-foreground">
+          {isAdmin ? "(Super-administrateur — accès total)" : "(Rôles attribués par l'administrateur)"}
+        </span>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        {shown.map((d) => {
+          const meta = DOMAIN_META[d];
+          return (
+            <Link key={d} to="/manage" search={{ tab: meta.tab }}>
+              <Card className="p-4 bg-gradient-card border-border/40 hover:shadow-glow hover:border-primary/40 transition-all cursor-pointer h-full">
+                <div className="h-9 w-9 rounded-lg bg-primary/15 grid place-items-center mb-2">
+                  <meta.icon className="h-4 w-4 text-primary-glow" />
+                </div>
+                <p className="font-semibold text-sm leading-tight">{meta.label}</p>
+                <p className="text-[11px] text-muted-foreground mt-1">Ouvrir le tableau de bord →</p>
+              </Card>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
   );
 }
