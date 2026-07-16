@@ -132,7 +132,7 @@ function RolesAdmin() {
       p_user_id: userId,
       p_domains: domains,
     });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Rôles mis à jour");
     qc.invalidateQueries({ queryKey: ["admin-users-roles"] });
   };
