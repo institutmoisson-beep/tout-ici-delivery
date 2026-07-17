@@ -26,6 +26,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedManageIndexRouteImport } from './routes/_authenticated/manage.index'
 import { Route as AuthenticatedManageRestaurantsRouteImport } from './routes/_authenticated/manage.restaurants'
 import { Route as AuthenticatedManageRelaisRouteImport } from './routes/_authenticated/manage.relais'
+import { Route as AuthenticatedManagePaymentsRouteImport } from './routes/_authenticated/manage.payments'
 import { Route as AuthenticatedManageOrdersRouteImport } from './routes/_authenticated/manage.orders'
 import { Route as AuthenticatedManageFinanceRouteImport } from './routes/_authenticated/manage.finance'
 
@@ -116,6 +117,12 @@ const AuthenticatedManageRelaisRoute =
     path: '/relais',
     getParentRoute: () => AuthenticatedManageRoute,
   } as any)
+const AuthenticatedManagePaymentsRoute =
+  AuthenticatedManagePaymentsRouteImport.update({
+    id: '/payments',
+    path: '/payments',
+    getParentRoute: () => AuthenticatedManageRoute,
+  } as any)
 const AuthenticatedManageOrdersRoute =
   AuthenticatedManageOrdersRouteImport.update({
     id: '/orders',
@@ -145,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/restaurants/': typeof RestaurantsIndexRoute
   '/manage/finance': typeof AuthenticatedManageFinanceRoute
   '/manage/orders': typeof AuthenticatedManageOrdersRoute
+  '/manage/payments': typeof AuthenticatedManagePaymentsRoute
   '/manage/relais': typeof AuthenticatedManageRelaisRoute
   '/manage/restaurants': typeof AuthenticatedManageRestaurantsRoute
   '/manage/': typeof AuthenticatedManageIndexRoute
@@ -164,6 +172,7 @@ export interface FileRoutesByTo {
   '/restaurants': typeof RestaurantsIndexRoute
   '/manage/finance': typeof AuthenticatedManageFinanceRoute
   '/manage/orders': typeof AuthenticatedManageOrdersRoute
+  '/manage/payments': typeof AuthenticatedManagePaymentsRoute
   '/manage/relais': typeof AuthenticatedManageRelaisRoute
   '/manage/restaurants': typeof AuthenticatedManageRestaurantsRoute
   '/manage': typeof AuthenticatedManageIndexRoute
@@ -186,6 +195,7 @@ export interface FileRoutesById {
   '/restaurants/': typeof RestaurantsIndexRoute
   '/_authenticated/manage/finance': typeof AuthenticatedManageFinanceRoute
   '/_authenticated/manage/orders': typeof AuthenticatedManageOrdersRoute
+  '/_authenticated/manage/payments': typeof AuthenticatedManagePaymentsRoute
   '/_authenticated/manage/relais': typeof AuthenticatedManageRelaisRoute
   '/_authenticated/manage/restaurants': typeof AuthenticatedManageRestaurantsRoute
   '/_authenticated/manage/': typeof AuthenticatedManageIndexRoute
@@ -208,6 +218,7 @@ export interface FileRouteTypes {
     | '/restaurants/'
     | '/manage/finance'
     | '/manage/orders'
+    | '/manage/payments'
     | '/manage/relais'
     | '/manage/restaurants'
     | '/manage/'
@@ -227,6 +238,7 @@ export interface FileRouteTypes {
     | '/restaurants'
     | '/manage/finance'
     | '/manage/orders'
+    | '/manage/payments'
     | '/manage/relais'
     | '/manage/restaurants'
     | '/manage'
@@ -248,6 +260,7 @@ export interface FileRouteTypes {
     | '/restaurants/'
     | '/_authenticated/manage/finance'
     | '/_authenticated/manage/orders'
+    | '/_authenticated/manage/payments'
     | '/_authenticated/manage/relais'
     | '/_authenticated/manage/restaurants'
     | '/_authenticated/manage/'
@@ -383,6 +396,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManageRelaisRouteImport
       parentRoute: typeof AuthenticatedManageRoute
     }
+    '/_authenticated/manage/payments': {
+      id: '/_authenticated/manage/payments'
+      path: '/payments'
+      fullPath: '/manage/payments'
+      preLoaderRoute: typeof AuthenticatedManagePaymentsRouteImport
+      parentRoute: typeof AuthenticatedManageRoute
+    }
     '/_authenticated/manage/orders': {
       id: '/_authenticated/manage/orders'
       path: '/orders'
@@ -403,6 +423,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedManageRouteChildren {
   AuthenticatedManageFinanceRoute: typeof AuthenticatedManageFinanceRoute
   AuthenticatedManageOrdersRoute: typeof AuthenticatedManageOrdersRoute
+  AuthenticatedManagePaymentsRoute: typeof AuthenticatedManagePaymentsRoute
   AuthenticatedManageRelaisRoute: typeof AuthenticatedManageRelaisRoute
   AuthenticatedManageRestaurantsRoute: typeof AuthenticatedManageRestaurantsRoute
   AuthenticatedManageIndexRoute: typeof AuthenticatedManageIndexRoute
@@ -411,6 +432,7 @@ interface AuthenticatedManageRouteChildren {
 const AuthenticatedManageRouteChildren: AuthenticatedManageRouteChildren = {
   AuthenticatedManageFinanceRoute: AuthenticatedManageFinanceRoute,
   AuthenticatedManageOrdersRoute: AuthenticatedManageOrdersRoute,
+  AuthenticatedManagePaymentsRoute: AuthenticatedManagePaymentsRoute,
   AuthenticatedManageRelaisRoute: AuthenticatedManageRelaisRoute,
   AuthenticatedManageRestaurantsRoute: AuthenticatedManageRestaurantsRoute,
   AuthenticatedManageIndexRoute: AuthenticatedManageIndexRoute,
