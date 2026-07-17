@@ -24,6 +24,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedCheckoutRouteImport } from './routes/_authenticated/checkout'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedManageIndexRouteImport } from './routes/_authenticated/manage.index'
+import { Route as AuthenticatedManageRestaurantsRouteImport } from './routes/_authenticated/manage.restaurants'
 
 const CguRoute = CguRouteImport.update({
   id: '/cgu',
@@ -100,6 +101,12 @@ const AuthenticatedManageIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedManageRoute,
   } as any)
+const AuthenticatedManageRestaurantsRoute =
+  AuthenticatedManageRestaurantsRouteImport.update({
+    id: '/restaurants',
+    path: '/restaurants',
+    getParentRoute: () => AuthenticatedManageRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -115,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/wallet': typeof AuthenticatedWalletRoute
   '/restaurants/$id': typeof RestaurantsIdRoute
   '/restaurants/': typeof RestaurantsIndexRoute
+  '/manage/restaurants': typeof AuthenticatedManageRestaurantsRoute
   '/manage/': typeof AuthenticatedManageIndexRoute
 }
 export interface FileRoutesByTo {
@@ -130,6 +138,7 @@ export interface FileRoutesByTo {
   '/wallet': typeof AuthenticatedWalletRoute
   '/restaurants/$id': typeof RestaurantsIdRoute
   '/restaurants': typeof RestaurantsIndexRoute
+  '/manage/restaurants': typeof AuthenticatedManageRestaurantsRoute
   '/manage': typeof AuthenticatedManageIndexRoute
 }
 export interface FileRoutesById {
@@ -148,6 +157,7 @@ export interface FileRoutesById {
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/restaurants/$id': typeof RestaurantsIdRoute
   '/restaurants/': typeof RestaurantsIndexRoute
+  '/_authenticated/manage/restaurants': typeof AuthenticatedManageRestaurantsRoute
   '/_authenticated/manage/': typeof AuthenticatedManageIndexRoute
 }
 export interface FileRouteTypes {
@@ -166,6 +176,7 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/restaurants/$id'
     | '/restaurants/'
+    | '/manage/restaurants'
     | '/manage/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -181,6 +192,7 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/restaurants/$id'
     | '/restaurants'
+    | '/manage/restaurants'
     | '/manage'
   id:
     | '__root__'
@@ -198,6 +210,7 @@ export interface FileRouteTypes {
     | '/_authenticated/wallet'
     | '/restaurants/$id'
     | '/restaurants/'
+    | '/_authenticated/manage/restaurants'
     | '/_authenticated/manage/'
   fileRoutesById: FileRoutesById
 }
@@ -317,14 +330,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManageIndexRouteImport
       parentRoute: typeof AuthenticatedManageRoute
     }
+    '/_authenticated/manage/restaurants': {
+      id: '/_authenticated/manage/restaurants'
+      path: '/restaurants'
+      fullPath: '/manage/restaurants'
+      preLoaderRoute: typeof AuthenticatedManageRestaurantsRouteImport
+      parentRoute: typeof AuthenticatedManageRoute
+    }
   }
 }
 
 interface AuthenticatedManageRouteChildren {
+  AuthenticatedManageRestaurantsRoute: typeof AuthenticatedManageRestaurantsRoute
   AuthenticatedManageIndexRoute: typeof AuthenticatedManageIndexRoute
 }
 
 const AuthenticatedManageRouteChildren: AuthenticatedManageRouteChildren = {
+  AuthenticatedManageRestaurantsRoute: AuthenticatedManageRestaurantsRoute,
   AuthenticatedManageIndexRoute: AuthenticatedManageIndexRoute,
 }
 
