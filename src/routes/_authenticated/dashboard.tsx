@@ -258,13 +258,13 @@ function StatCard({ icon: Icon, label, value, accent }: { icon: any; label: stri
   );
 }
 
-const DOMAIN_META: Record<string, { label: string; icon: any; tab: string }> = {
-  restaurants: { label: "Espace Restaurants & Plats", icon: Store, tab: "restaurants" },
-  relais: { label: "Espace Points relais", icon: MapPin, tab: "relais" },
-  orders: { label: "Espace Commandes", icon: Package, tab: "orders" },
-  finance: { label: "Espace Finance", icon: WalletIcon, tab: "finance" },
-  payments: { label: "Espace Passerelles de paiement", icon: Zap, tab: "gateways" },
-  profiles: { label: "Espace Profils", icon: Users, tab: "profiles" },
+const DOMAIN_META: Record<string, { label: string; icon: any; to: string }> = {
+  restaurants: { label: "Espace Restaurants & Plats", icon: Store, to: "/manage/restaurants" },
+  relais: { label: "Espace Points relais", icon: MapPin, to: "/manage/relais" },
+  orders: { label: "Espace Commandes", icon: Package, to: "/manage/orders" },
+  finance: { label: "Espace Finance", icon: WalletIcon, to: "/manage/finance" },
+  payments: { label: "Espace Passerelles de paiement", icon: Zap, to: "/manage/payments" },
+  profiles: { label: "Espace Profils", icon: Users, to: "/manage/profiles" },
 };
 
 function ManagementSpaces({ isAdmin, domains }: { isAdmin: boolean; domains: string[] }) {
@@ -283,7 +283,7 @@ function ManagementSpaces({ isAdmin, domains }: { isAdmin: boolean; domains: str
         {shown.map((d) => {
           const meta = DOMAIN_META[d];
           return (
-            <Link key={d} to="/manage" search={{ tab: meta.tab }}>
+            <Link key={d} to={meta.to}>
               <Card className="p-4 bg-gradient-card border-border/40 hover:shadow-glow hover:border-primary/40 transition-all cursor-pointer h-full">
                 <div className="h-9 w-9 rounded-lg bg-primary/15 grid place-items-center mb-2">
                   <meta.icon className="h-4 w-4 text-primary-glow" />

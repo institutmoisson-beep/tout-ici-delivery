@@ -23,6 +23,13 @@ import { Route as AuthenticatedManageRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCheckoutRouteImport } from './routes/_authenticated/checkout'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedManageIndexRouteImport } from './routes/_authenticated/manage.index'
+import { Route as AuthenticatedManageRestaurantsRouteImport } from './routes/_authenticated/manage.restaurants'
+import { Route as AuthenticatedManageRelaisRouteImport } from './routes/_authenticated/manage.relais'
+import { Route as AuthenticatedManageProfilesRouteImport } from './routes/_authenticated/manage.profiles'
+import { Route as AuthenticatedManagePaymentsRouteImport } from './routes/_authenticated/manage.payments'
+import { Route as AuthenticatedManageOrdersRouteImport } from './routes/_authenticated/manage.orders'
+import { Route as AuthenticatedManageFinanceRouteImport } from './routes/_authenticated/manage.finance'
 
 const CguRoute = CguRouteImport.update({
   id: '/cgu',
@@ -93,6 +100,48 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedManageIndexRoute =
+  AuthenticatedManageIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedManageRoute,
+  } as any)
+const AuthenticatedManageRestaurantsRoute =
+  AuthenticatedManageRestaurantsRouteImport.update({
+    id: '/restaurants',
+    path: '/restaurants',
+    getParentRoute: () => AuthenticatedManageRoute,
+  } as any)
+const AuthenticatedManageRelaisRoute =
+  AuthenticatedManageRelaisRouteImport.update({
+    id: '/relais',
+    path: '/relais',
+    getParentRoute: () => AuthenticatedManageRoute,
+  } as any)
+const AuthenticatedManageProfilesRoute =
+  AuthenticatedManageProfilesRouteImport.update({
+    id: '/profiles',
+    path: '/profiles',
+    getParentRoute: () => AuthenticatedManageRoute,
+  } as any)
+const AuthenticatedManagePaymentsRoute =
+  AuthenticatedManagePaymentsRouteImport.update({
+    id: '/payments',
+    path: '/payments',
+    getParentRoute: () => AuthenticatedManageRoute,
+  } as any)
+const AuthenticatedManageOrdersRoute =
+  AuthenticatedManageOrdersRouteImport.update({
+    id: '/orders',
+    path: '/orders',
+    getParentRoute: () => AuthenticatedManageRoute,
+  } as any)
+const AuthenticatedManageFinanceRoute =
+  AuthenticatedManageFinanceRouteImport.update({
+    id: '/finance',
+    path: '/finance',
+    getParentRoute: () => AuthenticatedManageRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -101,13 +150,20 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/manage': typeof AuthenticatedManageRoute
+  '/manage': typeof AuthenticatedManageRouteWithChildren
   '/orders': typeof AuthenticatedOrdersRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/setup': typeof AuthenticatedSetupRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/restaurants/$id': typeof RestaurantsIdRoute
   '/restaurants/': typeof RestaurantsIndexRoute
+  '/manage/finance': typeof AuthenticatedManageFinanceRoute
+  '/manage/orders': typeof AuthenticatedManageOrdersRoute
+  '/manage/payments': typeof AuthenticatedManagePaymentsRoute
+  '/manage/profiles': typeof AuthenticatedManageProfilesRoute
+  '/manage/relais': typeof AuthenticatedManageRelaisRoute
+  '/manage/restaurants': typeof AuthenticatedManageRestaurantsRoute
+  '/manage/': typeof AuthenticatedManageIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -116,13 +172,19 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/manage': typeof AuthenticatedManageRoute
   '/orders': typeof AuthenticatedOrdersRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/setup': typeof AuthenticatedSetupRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/restaurants/$id': typeof RestaurantsIdRoute
   '/restaurants': typeof RestaurantsIndexRoute
+  '/manage/finance': typeof AuthenticatedManageFinanceRoute
+  '/manage/orders': typeof AuthenticatedManageOrdersRoute
+  '/manage/payments': typeof AuthenticatedManagePaymentsRoute
+  '/manage/profiles': typeof AuthenticatedManageProfilesRoute
+  '/manage/relais': typeof AuthenticatedManageRelaisRoute
+  '/manage/restaurants': typeof AuthenticatedManageRestaurantsRoute
+  '/manage': typeof AuthenticatedManageIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -133,13 +195,20 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/checkout': typeof AuthenticatedCheckoutRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/manage': typeof AuthenticatedManageRoute
+  '/_authenticated/manage': typeof AuthenticatedManageRouteWithChildren
   '/_authenticated/orders': typeof AuthenticatedOrdersRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/setup': typeof AuthenticatedSetupRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/restaurants/$id': typeof RestaurantsIdRoute
   '/restaurants/': typeof RestaurantsIndexRoute
+  '/_authenticated/manage/finance': typeof AuthenticatedManageFinanceRoute
+  '/_authenticated/manage/orders': typeof AuthenticatedManageOrdersRoute
+  '/_authenticated/manage/payments': typeof AuthenticatedManagePaymentsRoute
+  '/_authenticated/manage/profiles': typeof AuthenticatedManageProfilesRoute
+  '/_authenticated/manage/relais': typeof AuthenticatedManageRelaisRoute
+  '/_authenticated/manage/restaurants': typeof AuthenticatedManageRestaurantsRoute
+  '/_authenticated/manage/': typeof AuthenticatedManageIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -157,6 +226,13 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/restaurants/$id'
     | '/restaurants/'
+    | '/manage/finance'
+    | '/manage/orders'
+    | '/manage/payments'
+    | '/manage/profiles'
+    | '/manage/relais'
+    | '/manage/restaurants'
+    | '/manage/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -165,13 +241,19 @@ export interface FileRouteTypes {
     | '/admin'
     | '/checkout'
     | '/dashboard'
-    | '/manage'
     | '/orders'
     | '/profile'
     | '/setup'
     | '/wallet'
     | '/restaurants/$id'
     | '/restaurants'
+    | '/manage/finance'
+    | '/manage/orders'
+    | '/manage/payments'
+    | '/manage/profiles'
+    | '/manage/relais'
+    | '/manage/restaurants'
+    | '/manage'
   id:
     | '__root__'
     | '/'
@@ -188,6 +270,13 @@ export interface FileRouteTypes {
     | '/_authenticated/wallet'
     | '/restaurants/$id'
     | '/restaurants/'
+    | '/_authenticated/manage/finance'
+    | '/_authenticated/manage/orders'
+    | '/_authenticated/manage/payments'
+    | '/_authenticated/manage/profiles'
+    | '/_authenticated/manage/relais'
+    | '/_authenticated/manage/restaurants'
+    | '/_authenticated/manage/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -299,14 +388,86 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/manage/': {
+      id: '/_authenticated/manage/'
+      path: '/'
+      fullPath: '/manage/'
+      preLoaderRoute: typeof AuthenticatedManageIndexRouteImport
+      parentRoute: typeof AuthenticatedManageRoute
+    }
+    '/_authenticated/manage/restaurants': {
+      id: '/_authenticated/manage/restaurants'
+      path: '/restaurants'
+      fullPath: '/manage/restaurants'
+      preLoaderRoute: typeof AuthenticatedManageRestaurantsRouteImport
+      parentRoute: typeof AuthenticatedManageRoute
+    }
+    '/_authenticated/manage/relais': {
+      id: '/_authenticated/manage/relais'
+      path: '/relais'
+      fullPath: '/manage/relais'
+      preLoaderRoute: typeof AuthenticatedManageRelaisRouteImport
+      parentRoute: typeof AuthenticatedManageRoute
+    }
+    '/_authenticated/manage/profiles': {
+      id: '/_authenticated/manage/profiles'
+      path: '/profiles'
+      fullPath: '/manage/profiles'
+      preLoaderRoute: typeof AuthenticatedManageProfilesRouteImport
+      parentRoute: typeof AuthenticatedManageRoute
+    }
+    '/_authenticated/manage/payments': {
+      id: '/_authenticated/manage/payments'
+      path: '/payments'
+      fullPath: '/manage/payments'
+      preLoaderRoute: typeof AuthenticatedManagePaymentsRouteImport
+      parentRoute: typeof AuthenticatedManageRoute
+    }
+    '/_authenticated/manage/orders': {
+      id: '/_authenticated/manage/orders'
+      path: '/orders'
+      fullPath: '/manage/orders'
+      preLoaderRoute: typeof AuthenticatedManageOrdersRouteImport
+      parentRoute: typeof AuthenticatedManageRoute
+    }
+    '/_authenticated/manage/finance': {
+      id: '/_authenticated/manage/finance'
+      path: '/finance'
+      fullPath: '/manage/finance'
+      preLoaderRoute: typeof AuthenticatedManageFinanceRouteImport
+      parentRoute: typeof AuthenticatedManageRoute
+    }
   }
 }
+
+interface AuthenticatedManageRouteChildren {
+  AuthenticatedManageFinanceRoute: typeof AuthenticatedManageFinanceRoute
+  AuthenticatedManageOrdersRoute: typeof AuthenticatedManageOrdersRoute
+  AuthenticatedManagePaymentsRoute: typeof AuthenticatedManagePaymentsRoute
+  AuthenticatedManageProfilesRoute: typeof AuthenticatedManageProfilesRoute
+  AuthenticatedManageRelaisRoute: typeof AuthenticatedManageRelaisRoute
+  AuthenticatedManageRestaurantsRoute: typeof AuthenticatedManageRestaurantsRoute
+  AuthenticatedManageIndexRoute: typeof AuthenticatedManageIndexRoute
+}
+
+const AuthenticatedManageRouteChildren: AuthenticatedManageRouteChildren = {
+  AuthenticatedManageFinanceRoute: AuthenticatedManageFinanceRoute,
+  AuthenticatedManageOrdersRoute: AuthenticatedManageOrdersRoute,
+  AuthenticatedManagePaymentsRoute: AuthenticatedManagePaymentsRoute,
+  AuthenticatedManageProfilesRoute: AuthenticatedManageProfilesRoute,
+  AuthenticatedManageRelaisRoute: AuthenticatedManageRelaisRoute,
+  AuthenticatedManageRestaurantsRoute: AuthenticatedManageRestaurantsRoute,
+  AuthenticatedManageIndexRoute: AuthenticatedManageIndexRoute,
+}
+
+const AuthenticatedManageRouteWithChildren =
+  AuthenticatedManageRoute._addFileChildren(AuthenticatedManageRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedCheckoutRoute: typeof AuthenticatedCheckoutRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedManageRoute: typeof AuthenticatedManageRoute
+  AuthenticatedManageRoute: typeof AuthenticatedManageRouteWithChildren
   AuthenticatedOrdersRoute: typeof AuthenticatedOrdersRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedSetupRoute: typeof AuthenticatedSetupRoute
@@ -317,7 +478,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedCheckoutRoute: AuthenticatedCheckoutRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedManageRoute: AuthenticatedManageRoute,
+  AuthenticatedManageRoute: AuthenticatedManageRouteWithChildren,
   AuthenticatedOrdersRoute: AuthenticatedOrdersRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedSetupRoute: AuthenticatedSetupRoute,
