@@ -1,79 +1,49 @@
-## 1. Bouton partage sur chaque plat
+# Plan — Panneau Courtage & Séquestre Tout’ICI
 
-Sur `src/routes/restaurants.$id.tsx` (DishCard), ajouter un bouton "Partager" (icône) visible sur chaque carte de plat pour tout visiteur, même non connecté. Il ouvre un petit menu avec :
+## Objectif
+Ajouter à Tout’ICI un espace distinct de courtage alimentaire, sans remplacer les commandes, restaurants, portefeuilles ni rôles actuels. Le nouveau parcours sécurise le paiement dans un séquestre jusqu’à la remise du plat confirmée par QR.
 
-- **WhatsApp** — `https://wa.me/?text=…`
-- **Facebook** — `https://www.facebook.com/sharer/sharer.php?u=…`
-- **X (Twitter)** — `https://twitter.com/intent/tweet?…`
-- **Copier le lien**
-- **Partager…** (Web Share API natif si `navigator.share` est disponible — permet Instagram/TikTok/Snapchat sur mobile) — inclut aussi le fichier image du plat quand `navigator.canShare({ files })` est supporté.
+## Expérience livrée
+- Un accès **Courtage sécurisé** depuis le tableau de bord et la navigation.
+- Un espace client pour créer une commande sécurisée, suivre les étapes et présenter son QR de remise.
+- Un espace restaurant pour accepter, préparer et remettre les commandes qui lui sont attribuées.
+- Un espace livreur pour voir ses missions, prendre en charge une livraison et scanner/saisir le QR du client.
+- Un espace administrateur pour superviser les commandes, affecter restaurants et livreurs, contrôler les paiements et consulter les répartitions.
+- Des rôles courtage distincts et cumulables, attribués par le super-administrateur, sans donner d’accès global.
 
-Le texte partagé inclut : nom du plat, prix formaté, description courte, nom + quartier du restaurant, et l'URL profonde `/restaurants/:id#dish-:dishId`. La carte reçoit `id="dish-<id>"` pour l'ancrage.
+## Parcours de paiement
+1. Le client choisit ses plats et valide une commande Courtage avec son portefeuille Tout’ICI.
+2. Le montant total est débité et verrouillé dans le séquestre par une opération atomique.
+3. La part restaurant, la part livreur et la commission Tout’ICI sont calculées et figées avec la commande.
+4. Le client reçoit un QR/code unique uniquement lorsque la commande part en livraison.
+5. Le livreur valide ce QR à la remise.
+6. La validation libère une seule fois les parts restaurant et livreur, puis clôture la commande.
+7. Une annulation autorisée rembourse le client une seule fois; toute répétition est bloquée.
 
-Aucune modification côté admin : le bouton s'affiche automatiquement dès qu'un plat existe.
+## Sécurité et données
+- Étendre les données existantes au lieu de créer un second système incompatible.
+- Conserver les rôles dans les tables de rôles dédiées; aucun rôle ne sera stocké dans le profil.
+- Ajouter des fonctions sécurisées pour créer, accepter, affecter, expédier, vérifier et rembourser les commandes.
+- Vérifier côté serveur l’identité, le rôle, le propriétaire du restaurant, le livreur affecté et chaque transition de statut.
+- Ne jamais exposer le secret QR brut dans les listes; stocker une empreinte et limiter l’accès au code de présentation au client concerné.
+- Ajouter les droits et règles d’accès minimaux pour chaque nouvelle donnée.
 
-## 2. Système multi-rôles
+## Écrans
+- `/courtage` : accueil et récapitulatif personnel.
+- `/courtage/commande` : validation sécurisée depuis le panier existant.
+- `/courtage/commandes` : historique, statut en temps réel et QR client.
+- `/courtage/restaurant` : commandes du ou des restaurants confiés à l’utilisateur.
+- `/courtage/livreur` : missions et validation QR par caméra ou saisie manuelle.
+- `/courtage/admin` : supervision, affectations, commissions et remboursements.
 
-### Schéma (migration)
+## Intégration
+- Réutiliser les restaurants, plats, profils, portefeuille et calculs de livraison actuels.
+- Ajouter l’association entre un gestionnaire restaurant et les restaurants qu’il peut gérer.
+- Ajouter les domaines `courtage_restaurant`, `courtage_livreur` et `courtage_admin` au système d’attribution existant.
+- Mettre à jour les types générés après la migration et conserver l’apparence violet/rosé kaki/noir de Tout’ICI, avec l’or comme signal de paiement sécurisé.
 
-Étendre l'enum `app_role` avec les valeurs :
-
-- `restaurant_manager` — gère `restaurants` + `dishes`
-- `relais_manager` — gère `points_relais`
-- `orders_manager` — gère `orders` (statuts, partage WhatsApp/SMS)
-- `finance_manager` — gère `wallets`, `wallet_transactions`, `financial_transactions`, `recharge_requests`, `delivery_pricing`
-- `payments_manager` — gère `payment_gateways`
-- `holidays_manager` — gère `public_holidays`
-- `profiles_manager` — consulte `profiles` + `user_roles` (lecture seule sur user_roles, sauf super-admin)
-
-Politiques RLS mises à jour sur chaque table concernée : en plus de `has_role(auth.uid(), 'admin')`, autoriser le rôle-métier correspondant via `has_role(auth.uid(), '<role>')` en SELECT/INSERT/UPDATE/DELETE. `admin` reste super-admin (peut tout, y compris attribuer les rôles). Seul `admin` peut écrire dans `user_roles`.
-
-Les rôles sont cumulables : un utilisateur peut avoir `restaurant_manager` + `orders_manager` par exemple.
-
-### Attribution (super-admin)
-
-Dans `src/routes/_authenticated/admin.tsx`, nouvelle section **Rôles & équipe** :
-
-- Liste des utilisateurs (via `profiles`) avec leurs rôles actuels sous forme de badges.
-- Recherche par email/nom.
-- Pour chaque utilisateur : cases à cocher pour chaque rôle (cumul possible). Sauvegarde via RPC `admin_set_user_roles(user_id, roles[])` (SECURITY DEFINER, vérifie `has_role(auth.uid(),'admin')`, remplace l'ensemble des rôles de l'utilisateur).
-
-### Dashboard utilisateur
-
-Sur `src/routes/_authenticated/dashboard.tsx`, ajouter en haut une section **Mes espaces de gestion** qui n'apparaît que si l'utilisateur possède au moins un rôle non-`user`. Un bouton/carte par rôle attribué :
-
-- 🍽️ Espace Restaurants → `/manage/restaurants`
-- 📍 Espace Points relais → `/manage/relais`
-- 📦 Espace Commandes → `/manage/orders`
-- 💰 Espace Finance → `/manage/finance`
-- 💳 Espace Passerelles → `/manage/payments`
-- 📅 Espace Jours fériés → `/manage/holidays`
-- 👥 Espace Profils → `/manage/profiles`
-
-### Pages de gestion par rôle
-
-Créer sous `src/routes/_authenticated/manage.*.tsx` une route par rôle. Chaque page :
-
-1. Vérifie côté client que l'utilisateur possède le rôle (ou est admin), sinon redirige vers `/dashboard` avec un toast.
-2. Réutilise directement les composants/sections existants de `admin.tsx` (extraits en composants partagés dans `src/components/admin-sections/`) pour ne pas dupliquer le code.
-3. Affiche un en-tête « Tableau de bord — <Rôle> » avec les mêmes outils CRUD que le super-admin, limités à son domaine.
-
-Le super-admin conserve `/admin` avec tout, ces routes sont des vues focalisées pour les managers.
-
-## Fichiers touchés
-
-- **Nouveau** : `supabase/migrations/<ts>_role_system.sql` (enum, RLS, RPC `admin_set_user_roles`)
-- **Nouveau** : `src/components/share-menu.tsx` (menu de partage réutilisable)
-- **Nouveau** : `src/components/admin-sections/{restaurants,dishes,relais,orders,finance,payments,holidays,profiles,roles}.tsx` (extractions depuis admin.tsx)
-- **Nouveau** : `src/routes/_authenticated/manage.{restaurants,relais,orders,finance,payments,holidays,profiles}.tsx`
-- **Modifié** : `src/routes/restaurants.$id.tsx` (bouton partager sur DishCard)
-- **Modifié** : `src/routes/_authenticated/admin.tsx` (import des sections extraites + nouvelle section Rôles)
-- **Modifié** : `src/routes/_authenticated/dashboard.tsx` (grille « Mes espaces de gestion »)
-- **Modifié** : `src/hooks/use-auth.tsx` (exposer `roles: string[]` en plus de `isAdmin`)
-
-## Notes techniques
-
-- Cumul des rôles : `user_roles` a déjà `UNIQUE(user_id, role)`, aucun changement de structure.
-- `admin_set_user_roles` fait un `DELETE` puis `INSERT` en transaction, en refusant de retirer le dernier `admin` du système (garde-fou).
-- L'enum PostgreSQL nécessite `ALTER TYPE ... ADD VALUE` hors transaction ; la migration utilise plusieurs statements séparés.
-- Les RLS existantes basées sur `has_role(auth.uid(),'admin')` restent en place ; on ajoute des policies additionnelles `OR has_role(auth.uid(),'<role_manager>')` via de nouvelles policies séparées (RLS = OR entre policies permissives).
+## Vérification
+- Tester la création avec solde suffisant et insuffisant.
+- Tester les accès client, restaurant, livreur et administrateur séparément.
+- Tester les transitions de statut, la validation QR correcte/incorrecte, le double scan et le remboursement.
+- Vérifier l’affichage et les actions sur mobile puis ordinateur, ainsi que les erreurs de compilation et d’exécution.
