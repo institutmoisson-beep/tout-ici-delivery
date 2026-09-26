@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      courier_applications: {
+        Row: {
+          admin_note: string | null
+          city: string
+          created_at: string
+          full_name: string
+          id: string
+          motivation: string | null
+          phone: string
+          processed_at: string | null
+          processed_by: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          vehicle: string | null
+        }
+        Insert: {
+          admin_note?: string | null
+          city: string
+          created_at?: string
+          full_name: string
+          id?: string
+          motivation?: string | null
+          phone: string
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          vehicle?: string | null
+        }
+        Update: {
+          admin_note?: string | null
+          city?: string
+          created_at?: string
+          full_name?: string
+          id?: string
+          motivation?: string | null
+          phone?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          vehicle?: string | null
+        }
+        Relationships: []
+      }
       delivery_pricing: {
         Row: {
           base_per_km: number
@@ -669,6 +717,58 @@ export type Database = {
         Args: { p_approve: boolean; p_recharge_id: string }
         Returns: undefined
       }
+      admin_assign_courier: {
+        Args: { p_courier_id: string; p_order_id: string }
+        Returns: undefined
+      }
+      admin_list_couriers: {
+        Args: never
+        Returns: {
+          active_deliveries: number
+          completed_deliveries: number
+          full_name: string
+          id: string
+          phone: string
+        }[]
+      }
+      admin_list_escrow_orders: {
+        Args: never
+        Returns: {
+          calculated_distance_km: number | null
+          client_address: string | null
+          client_latitude: number | null
+          client_longitude: number | null
+          commission_amount_fcfa: number | null
+          courier_id: string | null
+          created_at: string
+          delivery_city: string | null
+          delivery_fee: number
+          delivery_mode: Database["public"]["Enums"]["delivery_mode"]
+          escrow_status: string
+          id: string
+          is_intercity: boolean
+          items: Json
+          payment_method: Database["public"]["Enums"]["payment_method"]
+          point_relais_id: string | null
+          qr_code_secret: string | null
+          restaurant_id: string
+          scheduled_date: string | null
+          scheduled_time: string | null
+          status: Database["public"]["Enums"]["order_status"]
+          subtotal: number
+          total_amount: number
+          updated_at: string
+          user_id: string
+          user_rating: number | null
+          user_review: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "orders"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       admin_list_users: {
         Args: never
         Returns: {
@@ -679,6 +779,15 @@ export type Database = {
           is_admin: boolean
           phone: string
         }[]
+      }
+      admin_refund_escrow: { Args: { p_order_id: string }; Returns: undefined }
+      admin_review_courier_application: {
+        Args: { p_approve: boolean; p_id: string; p_note?: string }
+        Returns: undefined
+      }
+      admin_set_courier: {
+        Args: { p_active: boolean; p_user_id: string }
+        Returns: undefined
       }
       admin_set_manager_roles: {
         Args: { p_domains: string[]; p_user_id: string }
@@ -795,6 +904,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_courtage_admin: { Args: { _uid: string }; Returns: boolean }
       list_holiday_dates: {
         Args: never
         Returns: {
