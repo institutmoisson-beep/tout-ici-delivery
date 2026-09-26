@@ -21,6 +21,7 @@ import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedOrdersRouteImport } from './routes/_authenticated/orders'
 import { Route as AuthenticatedManageRouteImport } from './routes/_authenticated/manage'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedCourierRouteImport } from './routes/_authenticated/courier'
 import { Route as AuthenticatedCheckoutRouteImport } from './routes/_authenticated/checkout'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedManageIndexRouteImport } from './routes/_authenticated/manage.index'
@@ -90,6 +91,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCourierRoute = AuthenticatedCourierRouteImport.update({
+  id: '/courier',
+  path: '/courier',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedCheckoutRoute = AuthenticatedCheckoutRouteImport.update({
   id: '/checkout',
   path: '/checkout',
@@ -149,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/cgu': typeof CguRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
+  '/courier': typeof AuthenticatedCourierRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/manage': typeof AuthenticatedManageRouteWithChildren
   '/orders': typeof AuthenticatedOrdersRoute
@@ -171,6 +178,7 @@ export interface FileRoutesByTo {
   '/cgu': typeof CguRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
+  '/courier': typeof AuthenticatedCourierRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/orders': typeof AuthenticatedOrdersRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -194,6 +202,7 @@ export interface FileRoutesById {
   '/cgu': typeof CguRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/checkout': typeof AuthenticatedCheckoutRoute
+  '/_authenticated/courier': typeof AuthenticatedCourierRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/manage': typeof AuthenticatedManageRouteWithChildren
   '/_authenticated/orders': typeof AuthenticatedOrdersRoute
@@ -218,6 +227,7 @@ export interface FileRouteTypes {
     | '/cgu'
     | '/admin'
     | '/checkout'
+    | '/courier'
     | '/dashboard'
     | '/manage'
     | '/orders'
@@ -240,6 +250,7 @@ export interface FileRouteTypes {
     | '/cgu'
     | '/admin'
     | '/checkout'
+    | '/courier'
     | '/dashboard'
     | '/orders'
     | '/profile'
@@ -262,6 +273,7 @@ export interface FileRouteTypes {
     | '/cgu'
     | '/_authenticated/admin'
     | '/_authenticated/checkout'
+    | '/_authenticated/courier'
     | '/_authenticated/dashboard'
     | '/_authenticated/manage'
     | '/_authenticated/orders'
@@ -374,6 +386,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/courier': {
+      id: '/_authenticated/courier'
+      path: '/courier'
+      fullPath: '/courier'
+      preLoaderRoute: typeof AuthenticatedCourierRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/checkout': {
       id: '/_authenticated/checkout'
       path: '/checkout'
@@ -466,6 +485,7 @@ const AuthenticatedManageRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedCheckoutRoute: typeof AuthenticatedCheckoutRoute
+  AuthenticatedCourierRoute: typeof AuthenticatedCourierRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedManageRoute: typeof AuthenticatedManageRouteWithChildren
   AuthenticatedOrdersRoute: typeof AuthenticatedOrdersRoute
@@ -477,6 +497,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedCheckoutRoute: AuthenticatedCheckoutRoute,
+  AuthenticatedCourierRoute: AuthenticatedCourierRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedManageRoute: AuthenticatedManageRouteWithChildren,
   AuthenticatedOrdersRoute: AuthenticatedOrdersRoute,
