@@ -211,14 +211,19 @@ export type Database = {
           client_address: string | null
           client_latitude: number | null
           client_longitude: number | null
+          commission_amount_fcfa: number | null
+          courier_id: string | null
           created_at: string
+          delivery_city: string | null
           delivery_fee: number
           delivery_mode: Database["public"]["Enums"]["delivery_mode"]
+          escrow_status: string
           id: string
           is_intercity: boolean
           items: Json
           payment_method: Database["public"]["Enums"]["payment_method"]
           point_relais_id: string | null
+          qr_code_secret: string | null
           restaurant_id: string
           scheduled_date: string | null
           scheduled_time: string | null
@@ -235,14 +240,19 @@ export type Database = {
           client_address?: string | null
           client_latitude?: number | null
           client_longitude?: number | null
+          commission_amount_fcfa?: number | null
+          courier_id?: string | null
           created_at?: string
+          delivery_city?: string | null
           delivery_fee?: number
           delivery_mode: Database["public"]["Enums"]["delivery_mode"]
+          escrow_status?: string
           id?: string
           is_intercity?: boolean
           items: Json
           payment_method: Database["public"]["Enums"]["payment_method"]
           point_relais_id?: string | null
+          qr_code_secret?: string | null
           restaurant_id: string
           scheduled_date?: string | null
           scheduled_time?: string | null
@@ -259,14 +269,19 @@ export type Database = {
           client_address?: string | null
           client_latitude?: number | null
           client_longitude?: number | null
+          commission_amount_fcfa?: number | null
+          courier_id?: string | null
           created_at?: string
+          delivery_city?: string | null
           delivery_fee?: number
           delivery_mode?: Database["public"]["Enums"]["delivery_mode"]
+          escrow_status?: string
           id?: string
           is_intercity?: boolean
           items?: Json
           payment_method?: Database["public"]["Enums"]["payment_method"]
           point_relais_id?: string | null
+          qr_code_secret?: string | null
           restaurant_id?: string
           scheduled_date?: string | null
           scheduled_time?: string | null
@@ -279,6 +294,13 @@ export type Database = {
           user_review?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "orders_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orders_point_relais_id_fkey"
             columns: ["point_relais_id"]
@@ -513,6 +535,7 @@ export type Database = {
           name: string
           neighborhood: string
           opening_hours: string | null
+          owner_id: string | null
           price_per_km: number
         }
         Insert: {
@@ -528,6 +551,7 @@ export type Database = {
           name: string
           neighborhood: string
           opening_hours?: string | null
+          owner_id?: string | null
           price_per_km?: number
         }
         Update: {
@@ -543,9 +567,18 @@ export type Database = {
           name?: string
           neighborhood?: string
           opening_hours?: string | null
+          owner_id?: string | null
           price_per_km?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "restaurants_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -651,11 +684,82 @@ export type Database = {
         Args: { p_domains: string[]; p_user_id: string }
         Returns: undefined
       }
+      available_deliveries: {
+        Args: { _city?: string }
+        Returns: {
+          calculated_distance_km: number | null
+          client_address: string | null
+          client_latitude: number | null
+          client_longitude: number | null
+          commission_amount_fcfa: number | null
+          courier_id: string | null
+          created_at: string
+          delivery_city: string | null
+          delivery_fee: number
+          delivery_mode: Database["public"]["Enums"]["delivery_mode"]
+          escrow_status: string
+          id: string
+          is_intercity: boolean
+          items: Json
+          payment_method: Database["public"]["Enums"]["payment_method"]
+          point_relais_id: string | null
+          qr_code_secret: string | null
+          restaurant_id: string
+          scheduled_date: string | null
+          scheduled_time: string | null
+          status: Database["public"]["Enums"]["order_status"]
+          subtotal: number
+          total_amount: number
+          updated_at: string
+          user_id: string
+          user_rating: number | null
+          user_review: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "orders"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       calculate_distance_km: {
         Args: { lat1: number; lat2: number; lng1: number; lng2: number }
         Returns: number
       }
       claim_first_admin: { Args: never; Returns: boolean }
+      courier_accept_delivery: {
+        Args: { _order_id: string }
+        Returns: undefined
+      }
+      courier_mark_arrived: { Args: { _order_id: string }; Returns: undefined }
+      create_escrow_order: {
+        Args: {
+          p_client_address: string
+          p_client_latitude: number
+          p_client_longitude: number
+          p_commission_rate?: number
+          p_delivery_city: string
+          p_delivery_fee: number
+          p_delivery_mode: Database["public"]["Enums"]["delivery_mode"]
+          p_items: Json
+          p_point_relais_id: string
+          p_restaurant_id: string
+          p_subtotal: number
+        }
+        Returns: {
+          order_id: string
+          qr_code_secret: string
+        }[]
+      }
+      credit_wallet: {
+        Args: {
+          _amount: number
+          _order_id: string
+          _reference: string
+          _user_id: string
+        }
+        Returns: undefined
+      }
       ensure_wallet: { Args: { _uid: string }; Returns: number }
       has_manager: {
         Args: { _domain: string; _user_id: string }
@@ -668,7 +772,49 @@ export type Database = {
         }
         Returns: boolean
       }
+      my_courier_deliveries: {
+        Args: never
+        Returns: {
+          calculated_distance_km: number | null
+          client_address: string | null
+          client_latitude: number | null
+          client_longitude: number | null
+          commission_amount_fcfa: number | null
+          courier_id: string | null
+          created_at: string
+          delivery_city: string | null
+          delivery_fee: number
+          delivery_mode: Database["public"]["Enums"]["delivery_mode"]
+          escrow_status: string
+          id: string
+          is_intercity: boolean
+          items: Json
+          payment_method: Database["public"]["Enums"]["payment_method"]
+          point_relais_id: string | null
+          qr_code_secret: string | null
+          restaurant_id: string
+          scheduled_date: string | null
+          scheduled_time: string | null
+          status: Database["public"]["Enums"]["order_status"]
+          subtotal: number
+          total_amount: number
+          updated_at: string
+          user_id: string
+          user_rating: number | null
+          user_review: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "orders"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       pay_order_with_wallet: { Args: { p_order_id: string }; Returns: number }
+      verify_qr_and_release_funds: {
+        Args: { _order_id: string; _qr_code: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "user" | "courier"
