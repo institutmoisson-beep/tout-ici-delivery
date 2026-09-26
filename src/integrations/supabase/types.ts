@@ -671,7 +671,7 @@ export type Database = {
       pay_order_with_wallet: { Args: { p_order_id: string }; Returns: number }
     }
     Enums: {
-      app_role: "admin" | "user"
+      app_role: "admin" | "user" | "courier"
       delivery_mode: "EXPRESS" | "RELAIS" | "PICKUP"
       fin_tx_status:
         | "PENDING"
@@ -816,7 +816,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user"],
+      app_role: ["admin", "user", "courier"],
       delivery_mode: ["EXPRESS", "RELAIS", "PICKUP"],
       fin_tx_status: [
         "PENDING",
