@@ -761,6 +761,29 @@ export type Database = {
         Returns: undefined
       }
       ensure_wallet: { Args: { _uid: string }; Returns: number }
+      get_delivery_pricing: {
+        Args: never
+        Returns: {
+          base_per_km: number
+          holiday_multiplier: number
+          id: boolean
+          intercity_flat_surcharge: number
+          minimum_fee: number
+          night_end_hour: number
+          night_multiplier: number
+          night_start_hour: number
+          strike_active: boolean
+          strike_multiplier: number
+          updated_at: string
+          weekend_multiplier: number
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "delivery_pricing"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       has_manager: {
         Args: { _domain: string; _user_id: string }
         Returns: boolean
@@ -771,6 +794,12 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      list_holiday_dates: {
+        Args: never
+        Returns: {
+          holiday_date: string
+        }[]
       }
       my_courier_deliveries: {
         Args: never
