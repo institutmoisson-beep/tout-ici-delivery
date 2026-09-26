@@ -22,4 +22,6 @@ export const IVORIAN_CITIES = [
   "Man",
   "Daloa",
   "Gagnoa",
+  "Toumodi",
+  "Duékoué",
 ];
