@@ -64,12 +64,15 @@ function CheckoutPage() {
 
   const { data: pricing } = useQuery({
     queryKey: ["delivery-pricing"],
-    queryFn: async () => (await supabase.from("delivery_pricing" as any).select("*").maybeSingle()).data as any,
+    queryFn: async () => {
+      const { data } = await (supabase as any).rpc("get_delivery_pricing");
+      return (Array.isArray(data) ? data[0] : data) ?? null;
+    },
   });
 
   const { data: holidays = [] } = useQuery({
     queryKey: ["public-holidays"],
-    queryFn: async () => (await supabase.from("public_holidays" as any).select("holiday_date")).data as any[] ?? [],
+    queryFn: async () => ((await (supabase as any).rpc("list_holiday_dates")).data as any[] | null) ?? [],
   });
 
   const { data: wallet } = useQuery({
