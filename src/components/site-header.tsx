@@ -1,5 +1,5 @@
 import { Link, useRouter } from "@tanstack/react-router";
-import { ShoppingBag, Wallet, User as UserIcon, LogOut, ShieldCheck, Menu, LayoutDashboard } from "lucide-react";
+import { ShoppingBag, Wallet, User as UserIcon, LogOut, ShieldCheck, Menu, LayoutDashboard, Bike, LockKeyhole } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useCart } from "@/hooks/use-cart";
@@ -36,6 +36,7 @@ export function SiteHeader() {
           {user && <Link to="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">Tableau de bord</Link>}
           {user && <Link to="/orders" className="text-muted-foreground hover:text-foreground transition-colors">Commandes</Link>}
           {user && <Link to="/wallet" className="text-muted-foreground hover:text-foreground transition-colors">Wallet</Link>}
+          {user && <Link to="/courier" className="text-muted-foreground hover:text-foreground transition-colors">Devenir livreur</Link>}
           {isAdmin && <Link to="/admin" className="text-accent hover:text-accent/80 transition-colors flex items-center gap-1"><ShieldCheck className="h-4 w-4" />Admin</Link>}
         </nav>
 
@@ -75,6 +76,12 @@ export function SiteHeader() {
                 <DropdownMenuItem onClick={() => router.navigate({ to: "/wallet" })}>
                   <Wallet className="mr-2 h-4 w-4" />Mon portefeuille
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.navigate({ to: "/courier" })}>
+                  <Bike className="mr-2 h-4 w-4" />Devenir livreur
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.navigate({ to: "/checkout", search: { mode: "courtage" } })}>
+                  <LockKeyhole className="mr-2 h-4 w-4" />Courtage sécurisé
+                </DropdownMenuItem>
                 {isAdmin && (
                   <DropdownMenuItem onClick={() => router.navigate({ to: "/admin" })}>
                     <ShieldCheck className="mr-2 h-4 w-4" />Console admin
@@ -107,6 +114,7 @@ export function SiteHeader() {
             {user && <Link to="/orders" onClick={() => setMobileOpen(false)}>Commandes</Link>}
             {user && <Link to="/wallet" onClick={() => setMobileOpen(false)}>Wallet</Link>}
             {user && <Link to="/profile" onClick={() => setMobileOpen(false)}>Mon profil</Link>}
+            {user && <Link to="/courier" onClick={() => setMobileOpen(false)}>Devenir livreur</Link>}
             {isAdmin && <Link to="/admin" onClick={() => setMobileOpen(false)}>Admin</Link>}
           </nav>
         </div>
