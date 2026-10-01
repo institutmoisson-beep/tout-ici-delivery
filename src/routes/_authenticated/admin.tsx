@@ -107,6 +107,7 @@ const ALL_DOMAINS: { key: string; label: string }[] = [
   { key: "payments", label: "Passerelles de paiement" },
   { key: "holidays", label: "Jours fériés" },
   { key: "profiles", label: "Profils utilisateurs" },
+  { key: "courtage", label: "Courtage & Livreurs" },
 ];
 
 function RolesAdmin() {
