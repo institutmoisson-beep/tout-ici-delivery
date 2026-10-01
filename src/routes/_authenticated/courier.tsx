@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { MapPin, Package, ShieldOff } from "lucide-react";
+import { MapPin, Package } from "lucide-react";
+import { CourierApplicationForm } from "@/components/courtage/CourierApplicationForm";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -54,16 +55,7 @@ function CourierSpacePage() {
 
   if (loading) return null;
 
-  if (!isCourier) {
-    return (
-      <div className="mx-auto max-w-md p-6 text-center">
-        <ShieldOff className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">
-          Cet espace est réservé aux livreurs enregistrés. Contactez un administrateur pour activer votre compte.
-        </p>
-      </div>
-    );
-  }
+  if (!isCourier) return <CourierApplicationForm />;
 
   if (active) {
     return (

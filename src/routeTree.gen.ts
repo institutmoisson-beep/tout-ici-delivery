@@ -31,6 +31,7 @@ import { Route as AuthenticatedManageProfilesRouteImport } from './routes/_authe
 import { Route as AuthenticatedManagePaymentsRouteImport } from './routes/_authenticated/manage.payments'
 import { Route as AuthenticatedManageOrdersRouteImport } from './routes/_authenticated/manage.orders'
 import { Route as AuthenticatedManageFinanceRouteImport } from './routes/_authenticated/manage.finance'
+import { Route as AuthenticatedManageCourtageRouteImport } from './routes/_authenticated/manage.courtage'
 
 const CguRoute = CguRouteImport.update({
   id: '/cgu',
@@ -148,6 +149,12 @@ const AuthenticatedManageFinanceRoute =
     path: '/finance',
     getParentRoute: () => AuthenticatedManageRoute,
   } as any)
+const AuthenticatedManageCourtageRoute =
+  AuthenticatedManageCourtageRouteImport.update({
+    id: '/courtage',
+    path: '/courtage',
+    getParentRoute: () => AuthenticatedManageRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -164,6 +171,7 @@ export interface FileRoutesByFullPath {
   '/wallet': typeof AuthenticatedWalletRoute
   '/restaurants/$id': typeof RestaurantsIdRoute
   '/restaurants/': typeof RestaurantsIndexRoute
+  '/manage/courtage': typeof AuthenticatedManageCourtageRoute
   '/manage/finance': typeof AuthenticatedManageFinanceRoute
   '/manage/orders': typeof AuthenticatedManageOrdersRoute
   '/manage/payments': typeof AuthenticatedManagePaymentsRoute
@@ -186,6 +194,7 @@ export interface FileRoutesByTo {
   '/wallet': typeof AuthenticatedWalletRoute
   '/restaurants/$id': typeof RestaurantsIdRoute
   '/restaurants': typeof RestaurantsIndexRoute
+  '/manage/courtage': typeof AuthenticatedManageCourtageRoute
   '/manage/finance': typeof AuthenticatedManageFinanceRoute
   '/manage/orders': typeof AuthenticatedManageOrdersRoute
   '/manage/payments': typeof AuthenticatedManagePaymentsRoute
@@ -211,6 +220,7 @@ export interface FileRoutesById {
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/restaurants/$id': typeof RestaurantsIdRoute
   '/restaurants/': typeof RestaurantsIndexRoute
+  '/_authenticated/manage/courtage': typeof AuthenticatedManageCourtageRoute
   '/_authenticated/manage/finance': typeof AuthenticatedManageFinanceRoute
   '/_authenticated/manage/orders': typeof AuthenticatedManageOrdersRoute
   '/_authenticated/manage/payments': typeof AuthenticatedManagePaymentsRoute
@@ -236,6 +246,7 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/restaurants/$id'
     | '/restaurants/'
+    | '/manage/courtage'
     | '/manage/finance'
     | '/manage/orders'
     | '/manage/payments'
@@ -258,6 +269,7 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/restaurants/$id'
     | '/restaurants'
+    | '/manage/courtage'
     | '/manage/finance'
     | '/manage/orders'
     | '/manage/payments'
@@ -282,6 +294,7 @@ export interface FileRouteTypes {
     | '/_authenticated/wallet'
     | '/restaurants/$id'
     | '/restaurants/'
+    | '/_authenticated/manage/courtage'
     | '/_authenticated/manage/finance'
     | '/_authenticated/manage/orders'
     | '/_authenticated/manage/payments'
@@ -456,10 +469,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManageFinanceRouteImport
       parentRoute: typeof AuthenticatedManageRoute
     }
+    '/_authenticated/manage/courtage': {
+      id: '/_authenticated/manage/courtage'
+      path: '/courtage'
+      fullPath: '/manage/courtage'
+      preLoaderRoute: typeof AuthenticatedManageCourtageRouteImport
+      parentRoute: typeof AuthenticatedManageRoute
+    }
   }
 }
 
 interface AuthenticatedManageRouteChildren {
+  AuthenticatedManageCourtageRoute: typeof AuthenticatedManageCourtageRoute
   AuthenticatedManageFinanceRoute: typeof AuthenticatedManageFinanceRoute
   AuthenticatedManageOrdersRoute: typeof AuthenticatedManageOrdersRoute
   AuthenticatedManagePaymentsRoute: typeof AuthenticatedManagePaymentsRoute
@@ -470,6 +491,7 @@ interface AuthenticatedManageRouteChildren {
 }
 
 const AuthenticatedManageRouteChildren: AuthenticatedManageRouteChildren = {
+  AuthenticatedManageCourtageRoute: AuthenticatedManageCourtageRoute,
   AuthenticatedManageFinanceRoute: AuthenticatedManageFinanceRoute,
   AuthenticatedManageOrdersRoute: AuthenticatedManageOrdersRoute,
   AuthenticatedManagePaymentsRoute: AuthenticatedManagePaymentsRoute,

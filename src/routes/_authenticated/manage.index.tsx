@@ -16,6 +16,7 @@ const ROLES = [
   { domain: "finance", to: "/manage/finance", label: "Finance", desc: "Recharges, tarifs de livraison et journal", icon: Wallet },
   { domain: "payments", to: "/manage/payments", label: "Passerelles de paiement", desc: "Configurer les moyens de paiement", icon: Zap },
   { domain: "profiles", to: "/manage/profiles", label: "Profils", desc: "Consulter les profils utilisateurs", icon: Users },
+  { domain: "courtage", to: "/manage/courtage", label: "Courtage & Livreurs", desc: "Demandes, livreurs, affectations, séquestre", icon: Package },
 ] as const;
 
 function ManageHub() {

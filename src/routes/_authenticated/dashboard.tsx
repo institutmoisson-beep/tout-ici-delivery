@@ -127,6 +127,14 @@ function DashboardPage() {
               Explorer les restaurants
             </Button>
           </Link>
+          <Link to="/courier">
+            <Button variant="outline">Espace livreur</Button>
+          </Link>
+          {isAdmin && (
+            <Link to="/manage/courtage">
+              <Button variant="outline">Courtage & Livreurs</Button>
+            </Link>
+          )}
           {isAdmin && (
             <Link to="/admin">
               <Button className="bg-gradient-primary shadow-glow border-0">
