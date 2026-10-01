@@ -9,37 +9,33 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
-import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CguRouteImport } from './routes/cgu'
-import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
-import { Route as AuthenticatedCheckoutRouteImport } from './routes/_authenticated/checkout'
-import { Route as AuthenticatedCourierRouteImport } from './routes/_authenticated/courier'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedManageRouteImport } from './routes/_authenticated/manage'
-import { Route as AuthenticatedOrdersRouteImport } from './routes/_authenticated/orders'
-import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
-import { Route as AuthenticatedSetupRouteImport } from './routes/_authenticated/setup'
-import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as RestaurantsIndexRouteImport } from './routes/restaurants.index'
 import { Route as RestaurantsIdRouteImport } from './routes/restaurants.$id'
+import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
+import { Route as AuthenticatedSetupRouteImport } from './routes/_authenticated/setup'
+import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedOrdersRouteImport } from './routes/_authenticated/orders'
+import { Route as AuthenticatedManageRouteImport } from './routes/_authenticated/manage'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedCourierRouteImport } from './routes/_authenticated/courier'
+import { Route as AuthenticatedCheckoutRouteImport } from './routes/_authenticated/checkout'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedManageIndexRouteImport } from './routes/_authenticated/manage.index'
-import { Route as AuthenticatedManageCourtageRouteImport } from './routes/_authenticated/manage.courtage'
-import { Route as AuthenticatedManageFinanceRouteImport } from './routes/_authenticated/manage.finance'
-import { Route as AuthenticatedManageOrdersRouteImport } from './routes/_authenticated/manage.orders'
-import { Route as AuthenticatedManagePaymentsRouteImport } from './routes/_authenticated/manage.payments'
-import { Route as AuthenticatedManageProfilesRouteImport } from './routes/_authenticated/manage.profiles'
-import { Route as AuthenticatedManageRelaisRouteImport } from './routes/_authenticated/manage.relais'
 import { Route as AuthenticatedManageRestaurantsRouteImport } from './routes/_authenticated/manage.restaurants'
+import { Route as AuthenticatedManageRelaisRouteImport } from './routes/_authenticated/manage.relais'
+import { Route as AuthenticatedManageProfilesRouteImport } from './routes/_authenticated/manage.profiles'
+import { Route as AuthenticatedManagePaymentsRouteImport } from './routes/_authenticated/manage.payments'
+import { Route as AuthenticatedManageOrdersRouteImport } from './routes/_authenticated/manage.orders'
+import { Route as AuthenticatedManageFinanceRouteImport } from './routes/_authenticated/manage.finance'
+import { Route as AuthenticatedManageCourtageRouteImport } from './routes/_authenticated/manage.courtage'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const CguRoute = CguRouteImport.update({
+  id: '/cgu',
+  path: '/cgu',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -47,55 +43,14 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CguRoute = CguRouteImport.update({
-  id: '/cgu',
-  path: '/cgu',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedCheckoutRoute = AuthenticatedCheckoutRouteImport.update({
-  id: '/checkout',
-  path: '/checkout',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedCourierRoute = AuthenticatedCourierRouteImport.update({
-  id: '/courier',
-  path: '/courier',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedManageRoute = AuthenticatedManageRouteImport.update({
-  id: '/manage',
-  path: '/manage',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedOrdersRoute = AuthenticatedOrdersRouteImport.update({
-  id: '/orders',
-  path: '/orders',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedSetupRoute = AuthenticatedSetupRouteImport.update({
-  id: '/setup',
-  path: '/setup',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
-  id: '/wallet',
-  path: '/wallet',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const RestaurantsIndexRoute = RestaurantsIndexRouteImport.update({
   id: '/restaurants/',
@@ -107,40 +62,61 @@ const RestaurantsIdRoute = RestaurantsIdRouteImport.update({
   path: '/restaurants/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSetupRoute = AuthenticatedSetupRouteImport.update({
+  id: '/setup',
+  path: '/setup',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOrdersRoute = AuthenticatedOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedManageRoute = AuthenticatedManageRouteImport.update({
+  id: '/manage',
+  path: '/manage',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCourierRoute = AuthenticatedCourierRouteImport.update({
+  id: '/courier',
+  path: '/courier',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCheckoutRoute = AuthenticatedCheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedManageIndexRoute =
   AuthenticatedManageIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedManageRoute,
   } as any)
-const AuthenticatedManageCourtageRoute =
-  AuthenticatedManageCourtageRouteImport.update({
-    id: '/courtage',
-    path: '/courtage',
-    getParentRoute: () => AuthenticatedManageRoute,
-  } as any)
-const AuthenticatedManageFinanceRoute =
-  AuthenticatedManageFinanceRouteImport.update({
-    id: '/finance',
-    path: '/finance',
-    getParentRoute: () => AuthenticatedManageRoute,
-  } as any)
-const AuthenticatedManageOrdersRoute =
-  AuthenticatedManageOrdersRouteImport.update({
-    id: '/orders',
-    path: '/orders',
-    getParentRoute: () => AuthenticatedManageRoute,
-  } as any)
-const AuthenticatedManagePaymentsRoute =
-  AuthenticatedManagePaymentsRouteImport.update({
-    id: '/payments',
-    path: '/payments',
-    getParentRoute: () => AuthenticatedManageRoute,
-  } as any)
-const AuthenticatedManageProfilesRoute =
-  AuthenticatedManageProfilesRouteImport.update({
-    id: '/profiles',
-    path: '/profiles',
+const AuthenticatedManageRestaurantsRoute =
+  AuthenticatedManageRestaurantsRouteImport.update({
+    id: '/restaurants',
+    path: '/restaurants',
     getParentRoute: () => AuthenticatedManageRoute,
   } as any)
 const AuthenticatedManageRelaisRoute =
@@ -149,10 +125,34 @@ const AuthenticatedManageRelaisRoute =
     path: '/relais',
     getParentRoute: () => AuthenticatedManageRoute,
   } as any)
-const AuthenticatedManageRestaurantsRoute =
-  AuthenticatedManageRestaurantsRouteImport.update({
-    id: '/restaurants',
-    path: '/restaurants',
+const AuthenticatedManageProfilesRoute =
+  AuthenticatedManageProfilesRouteImport.update({
+    id: '/profiles',
+    path: '/profiles',
+    getParentRoute: () => AuthenticatedManageRoute,
+  } as any)
+const AuthenticatedManagePaymentsRoute =
+  AuthenticatedManagePaymentsRouteImport.update({
+    id: '/payments',
+    path: '/payments',
+    getParentRoute: () => AuthenticatedManageRoute,
+  } as any)
+const AuthenticatedManageOrdersRoute =
+  AuthenticatedManageOrdersRouteImport.update({
+    id: '/orders',
+    path: '/orders',
+    getParentRoute: () => AuthenticatedManageRoute,
+  } as any)
+const AuthenticatedManageFinanceRoute =
+  AuthenticatedManageFinanceRouteImport.update({
+    id: '/finance',
+    path: '/finance',
+    getParentRoute: () => AuthenticatedManageRoute,
+  } as any)
+const AuthenticatedManageCourtageRoute =
+  AuthenticatedManageCourtageRouteImport.update({
+    id: '/courtage',
+    path: '/courtage',
     getParentRoute: () => AuthenticatedManageRoute,
   } as any)
 
@@ -315,18 +315,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+    '/cgu': {
+      id: '/cgu'
+      path: '/cgu'
+      fullPath: '/cgu'
+      preLoaderRoute: typeof CguRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -336,75 +329,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/cgu': {
-      id: '/cgu'
-      path: '/cgu'
-      fullPath: '/cgu'
-      preLoaderRoute: typeof CguRouteImport
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/admin': {
-      id: '/_authenticated/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AuthenticatedAdminRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/checkout': {
-      id: '/_authenticated/checkout'
-      path: '/checkout'
-      fullPath: '/checkout'
-      preLoaderRoute: typeof AuthenticatedCheckoutRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/courier': {
-      id: '/_authenticated/courier'
-      path: '/courier'
-      fullPath: '/courier'
-      preLoaderRoute: typeof AuthenticatedCourierRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/manage': {
-      id: '/_authenticated/manage'
-      path: '/manage'
-      fullPath: '/manage'
-      preLoaderRoute: typeof AuthenticatedManageRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/orders': {
-      id: '/_authenticated/orders'
-      path: '/orders'
-      fullPath: '/orders'
-      preLoaderRoute: typeof AuthenticatedOrdersRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/profile': {
-      id: '/_authenticated/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof AuthenticatedProfileRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/setup': {
-      id: '/_authenticated/setup'
-      path: '/setup'
-      fullPath: '/setup'
-      preLoaderRoute: typeof AuthenticatedSetupRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/wallet': {
-      id: '/_authenticated/wallet'
-      path: '/wallet'
-      fullPath: '/wallet'
-      preLoaderRoute: typeof AuthenticatedWalletRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/restaurants/': {
       id: '/restaurants/'
@@ -420,6 +357,69 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RestaurantsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/wallet': {
+      id: '/_authenticated/wallet'
+      path: '/wallet'
+      fullPath: '/wallet'
+      preLoaderRoute: typeof AuthenticatedWalletRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/setup': {
+      id: '/_authenticated/setup'
+      path: '/setup'
+      fullPath: '/setup'
+      preLoaderRoute: typeof AuthenticatedSetupRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/profile': {
+      id: '/_authenticated/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/orders': {
+      id: '/_authenticated/orders'
+      path: '/orders'
+      fullPath: '/orders'
+      preLoaderRoute: typeof AuthenticatedOrdersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/manage': {
+      id: '/_authenticated/manage'
+      path: '/manage'
+      fullPath: '/manage'
+      preLoaderRoute: typeof AuthenticatedManageRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/courier': {
+      id: '/_authenticated/courier'
+      path: '/courier'
+      fullPath: '/courier'
+      preLoaderRoute: typeof AuthenticatedCourierRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/checkout': {
+      id: '/_authenticated/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof AuthenticatedCheckoutRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/manage/': {
       id: '/_authenticated/manage/'
       path: '/'
@@ -427,39 +427,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManageIndexRouteImport
       parentRoute: typeof AuthenticatedManageRoute
     }
-    '/_authenticated/manage/courtage': {
-      id: '/_authenticated/manage/courtage'
-      path: '/courtage'
-      fullPath: '/manage/courtage'
-      preLoaderRoute: typeof AuthenticatedManageCourtageRouteImport
-      parentRoute: typeof AuthenticatedManageRoute
-    }
-    '/_authenticated/manage/finance': {
-      id: '/_authenticated/manage/finance'
-      path: '/finance'
-      fullPath: '/manage/finance'
-      preLoaderRoute: typeof AuthenticatedManageFinanceRouteImport
-      parentRoute: typeof AuthenticatedManageRoute
-    }
-    '/_authenticated/manage/orders': {
-      id: '/_authenticated/manage/orders'
-      path: '/orders'
-      fullPath: '/manage/orders'
-      preLoaderRoute: typeof AuthenticatedManageOrdersRouteImport
-      parentRoute: typeof AuthenticatedManageRoute
-    }
-    '/_authenticated/manage/payments': {
-      id: '/_authenticated/manage/payments'
-      path: '/payments'
-      fullPath: '/manage/payments'
-      preLoaderRoute: typeof AuthenticatedManagePaymentsRouteImport
-      parentRoute: typeof AuthenticatedManageRoute
-    }
-    '/_authenticated/manage/profiles': {
-      id: '/_authenticated/manage/profiles'
-      path: '/profiles'
-      fullPath: '/manage/profiles'
-      preLoaderRoute: typeof AuthenticatedManageProfilesRouteImport
+    '/_authenticated/manage/restaurants': {
+      id: '/_authenticated/manage/restaurants'
+      path: '/restaurants'
+      fullPath: '/manage/restaurants'
+      preLoaderRoute: typeof AuthenticatedManageRestaurantsRouteImport
       parentRoute: typeof AuthenticatedManageRoute
     }
     '/_authenticated/manage/relais': {
@@ -469,11 +441,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManageRelaisRouteImport
       parentRoute: typeof AuthenticatedManageRoute
     }
-    '/_authenticated/manage/restaurants': {
-      id: '/_authenticated/manage/restaurants'
-      path: '/restaurants'
-      fullPath: '/manage/restaurants'
-      preLoaderRoute: typeof AuthenticatedManageRestaurantsRouteImport
+    '/_authenticated/manage/profiles': {
+      id: '/_authenticated/manage/profiles'
+      path: '/profiles'
+      fullPath: '/manage/profiles'
+      preLoaderRoute: typeof AuthenticatedManageProfilesRouteImport
+      parentRoute: typeof AuthenticatedManageRoute
+    }
+    '/_authenticated/manage/payments': {
+      id: '/_authenticated/manage/payments'
+      path: '/payments'
+      fullPath: '/manage/payments'
+      preLoaderRoute: typeof AuthenticatedManagePaymentsRouteImport
+      parentRoute: typeof AuthenticatedManageRoute
+    }
+    '/_authenticated/manage/orders': {
+      id: '/_authenticated/manage/orders'
+      path: '/orders'
+      fullPath: '/manage/orders'
+      preLoaderRoute: typeof AuthenticatedManageOrdersRouteImport
+      parentRoute: typeof AuthenticatedManageRoute
+    }
+    '/_authenticated/manage/finance': {
+      id: '/_authenticated/manage/finance'
+      path: '/finance'
+      fullPath: '/manage/finance'
+      preLoaderRoute: typeof AuthenticatedManageFinanceRouteImport
+      parentRoute: typeof AuthenticatedManageRoute
+    }
+    '/_authenticated/manage/courtage': {
+      id: '/_authenticated/manage/courtage'
+      path: '/courtage'
+      fullPath: '/manage/courtage'
+      preLoaderRoute: typeof AuthenticatedManageCourtageRouteImport
       parentRoute: typeof AuthenticatedManageRoute
     }
   }
