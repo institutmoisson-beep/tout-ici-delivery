@@ -4,7 +4,7 @@ import { useState } from "react";
 import {
   ShieldCheck, ShoppingBag, Wallet as WalletIcon, MapPin, Clock, ChefHat,
   Truck, CheckCircle2, XCircle, ArrowUpRight, ArrowDownLeft, LocateFixed,
-  UtensilsCrossed, Store, Package, Zap, Users,
+  UtensilsCrossed, Store, Package, Zap, Users, Bike,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -147,6 +147,32 @@ function DashboardPage() {
       </div>
 
       {(isAdmin || domains.length > 0) && <ManagementSpaces isAdmin={isAdmin} domains={domains} />}
+
+      {/* Quick actions: courier application & escrow */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+        <Link to="/courier">
+          <Card className="p-4 bg-gradient-card border-border/40 hover:shadow-glow hover:border-primary/40 transition-all cursor-pointer h-full flex items-center gap-3">
+            <div className="h-10 w-10 rounded-lg bg-primary/15 grid place-items-center shrink-0">
+              <Bike className="h-5 w-5 text-primary-glow" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm">Devenir livreur</p>
+              <p className="text-[11px] text-muted-foreground">Faites votre demande ou accédez à vos missions</p>
+            </div>
+          </Card>
+        </Link>
+        <Link to="/checkout">
+          <Card className="p-4 bg-gradient-card border-border/40 hover:shadow-glow hover:border-gold/40 transition-all cursor-pointer h-full flex items-center gap-3">
+            <div className="h-10 w-10 rounded-lg bg-gold/15 grid place-items-center shrink-0">
+              <ShieldCheck className="h-5 w-5 text-gold" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm">Courtage sécurisé</p>
+              <p className="text-[11px] text-muted-foreground">Paiement séquestré, libéré à la remise par QR</p>
+            </div>
+          </Card>
+        </Link>
+      </div>
 
       {/* Recap grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
