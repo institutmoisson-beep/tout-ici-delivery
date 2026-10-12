@@ -1,4 +1,5 @@
 import type { ErrorComponentProps } from "@tanstack/react-router";
+import { ActivityTracker } from "@/components/activity-tracker";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
@@ -139,6 +140,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <CartProvider>
+          <ActivityTracker />
           <div className="min-h-screen flex flex-col">
             <SiteHeader />
             <main className="flex-1">

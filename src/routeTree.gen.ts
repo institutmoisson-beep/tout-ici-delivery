@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CguRouteImport } from './routes/cgu'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedCheckoutRouteImport } from './routes/_authenticated/checkout'
 import { Route as AuthenticatedCourierRouteImport } from './routes/_authenticated/courier'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -55,6 +56,11 @@ const CguRoute = CguRouteImport.update({
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAnalyticsRoute = AuthenticatedAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedCheckoutRoute = AuthenticatedCheckoutRouteImport.update({
@@ -161,6 +167,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/cgu': typeof CguRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/analytics': typeof AuthenticatedAnalyticsRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
   '/courier': typeof AuthenticatedCourierRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -185,6 +192,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/cgu': typeof CguRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/analytics': typeof AuthenticatedAnalyticsRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
   '/courier': typeof AuthenticatedCourierRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -210,6 +218,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/cgu': typeof CguRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/checkout': typeof AuthenticatedCheckoutRoute
   '/_authenticated/courier': typeof AuthenticatedCourierRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -236,6 +245,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cgu'
     | '/admin'
+    | '/analytics'
     | '/checkout'
     | '/courier'
     | '/dashboard'
@@ -260,6 +270,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cgu'
     | '/admin'
+    | '/analytics'
     | '/checkout'
     | '/courier'
     | '/dashboard'
@@ -284,6 +295,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cgu'
     | '/_authenticated/admin'
+    | '/_authenticated/analytics'
     | '/_authenticated/checkout'
     | '/_authenticated/courier'
     | '/_authenticated/dashboard'
@@ -348,6 +360,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/analytics': {
+      id: '/_authenticated/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AuthenticatedAnalyticsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/checkout': {
@@ -506,6 +525,7 @@ const AuthenticatedManageRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedCheckoutRoute: typeof AuthenticatedCheckoutRoute
   AuthenticatedCourierRoute: typeof AuthenticatedCourierRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
@@ -518,6 +538,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
   AuthenticatedCheckoutRoute: AuthenticatedCheckoutRoute,
   AuthenticatedCourierRoute: AuthenticatedCourierRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,

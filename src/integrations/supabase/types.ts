@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_events: {
+        Row: {
+          created_at: string
+          device: string | null
+          event: string
+          id: string
+          meta: Json | null
+          path: string
+          session_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          device?: string | null
+          event?: string
+          id?: string
+          meta?: Json | null
+          path: string
+          session_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          device?: string | null
+          event?: string
+          id?: string
+          meta?: Json | null
+          path?: string
+          session_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       courier_applications: {
         Row: {
           admin_note: string | null
@@ -713,6 +746,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_analytics_summary: { Args: never; Returns: Json }
       admin_approve_recharge: {
         Args: { p_approve: boolean; p_recharge_id: string }
         Returns: undefined
