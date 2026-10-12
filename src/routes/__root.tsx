@@ -139,6 +139,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <CartProvider>
+          <ActivityTracker />
           <div className="min-h-screen flex flex-col">
             <SiteHeader />
             <main className="flex-1">

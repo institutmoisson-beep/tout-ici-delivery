@@ -131,6 +131,11 @@ function DashboardPage() {
             <Button variant="outline">Espace livreur</Button>
           </Link>
           {isAdmin && (
+            <Link to="/analytics">
+              <Button variant="outline">📊 Statistiques en direct</Button>
+            </Link>
+          )}
+          {isAdmin && (
             <Link to="/manage/courtage">
               <Button variant="outline">Courtage & Livreurs</Button>
             </Link>
